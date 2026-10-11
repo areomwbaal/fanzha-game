@@ -823,7 +823,11 @@ function buildWheel(){
   wheel.innerHTML='';
   wheelCategories.forEach((c,i)=>{
     const label=document.createElement('div');
-    label.style.cssText='position:absolute;top:50%;left:50%;width:100px;height:20px;margin-left:-50px;margin-top:-10px;text-align:center;color:#fff;font-size:11px;font-weight:bold;text-shadow:0 1px 3px rgba(0,0,0,.5);transform:rotate('+(i*360/n+30)+'deg) translateY(-100px);transform-origin:center 100px;pointer-events:none;';
+    // 扇区中心角：conic-gradient 从 12 点钟顺时针起算，与 CSS rotate 方向一致
+    const ang=i*360/n+180/n;
+    // 下半圈的标签再转 180°，避免文字倒置
+    const flip=(ang>90&&ang<270)?' rotate(180deg)':'';
+    label.style.cssText='position:absolute;top:50%;left:50%;width:90px;height:20px;line-height:20px;margin-left:-45px;margin-top:-10px;text-align:center;color:#fff;font-size:12px;font-weight:bold;letter-spacing:1px;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.6);transform-origin:center center;transform:rotate('+ang+'deg) translateY(-82px)'+flip+';pointer-events:none;';
     label.textContent=c.name;
     wheel.appendChild(label);
   });
