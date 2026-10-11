@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>反诈大冒险·四模式篇</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+html,body{width:100%;height:100%;}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:#0a0a1e;overflow:hidden;touch-action:none;position:relative;}
+/* 固定 480x800 设计稿尺寸，整体按窗口等比缩放 */
+#gameWrap{position:absolute;left:50%;top:50%;width:480px;height:800px;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:center center;overflow:hidden;box-shadow:0 0 60px rgba(102,126,234,.4);}
+canvas{display:block;width:100%;height:100%;}
+
+/* ===== 首页大厅 ===== */
+#startScreen{position:absolute;inset:0;z-index:20;overflow:hidden;}
+#startCanvas{position:absolute;inset:0;width:100%;height:100%;}
+.start-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;padding:20px 16px 14px;overflow-y:auto;}
+.top-bar{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.top-badge{background:linear-gradient(135deg,rgba(255,215,0,.25),rgba(255,107,107,.25));backdrop-filter:blur(10px);border:1px solid rgba(255,215,0,.4);border-radius:20px;padding:5px 12px;font-size:10px;color:#ffd700;display:flex;align-items:center;gap:4px;font-weight:bold;}
+.sound-toggle{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;backdrop-filter:blur(10px);}
+.game-logo{text-align:center;margin:4px 0 8px;}
+.game-logo .icon{font-size:52px;display:inline-block;animation:floatIcon 2s ease-in-out infinite;filter:drop-shadow(0 0 25px rgba(255,215,0,.7));}
+@keyframes floatIcon{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+.game-logo h1{font-size:30px;font-weight:900;background:linear-gradient(135deg,#ffd700 0%,#ff6b6b 25%,#4facfe 50%,#00f2fe 75%,#a855f7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:2px;margin-top:3px;}
+.game-logo .subtitle{font-size:12px;color:rgba(255,255,255,.9);margin-top:3px;letter-spacing:3px;}
+.game-logo .tagline{font-size:10px;color:rgba(255,255,255,.65);margin-top:5px;background:linear-gradient(135deg,rgba(255,215,0,.15),rgba(168,85,247,.15));padding:3px 12px;border-radius:10px;display:inline-block;border:1px solid rgba(255,255,255,.1);}
+
+/* 模式大厅网格 */
+.mode-hall{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:380px;margin:8px 0;}
+.hall-card{border-radius:16px;padding:14px 10px;cursor:pointer;transition:all .2s;border:2px solid rgba(255,255,255,.25);position:relative;overflow:hidden;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.hall-card:active{transform:scale(.95);}
+.hall-card::after{content:'';position:absolute;top:-30%;right:-30%;width:80px;height:160%;background:rgba(255,255,255,.1);transform:rotate(25deg);}
+.hall-card .h-icon{font-size:34px;margin-bottom:5px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.3));position:relative;z-index:1;}
+.hall-card .h-title{font-size:14px;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.3);position:relative;z-index:1;}
+.hall-card .h-desc{font-size:9px;color:rgba(255,255,255,.85);margin-top:3px;line-height:1.3;position:relative;z-index:1;}
+.hall-card .h-tag{position:absolute;top:6px;right:6px;font-size:8px;background:rgba(0,0,0,.3);padding:2px 6px;border-radius:8px;color:#ffd700;font-weight:bold;z-index:1;}
+.hall-card.m1{background:linear-gradient(135deg,#ff6b6b,#feca57,#48dbfb);}
+.hall-card.m2{background:linear-gradient(135deg,#a855f7,#ec4899,#f59e0b);}
+.hall-card.m3{background:linear-gradient(135deg,#43e97b,#38f9d7,#4facfe);}
+.hall-card.m4{background:linear-gradient(135deg,#fa709a,#fee140,#ff6b6b);}
+
+.func-row{display:flex;gap:7px;width:100%;max-width:380px;margin:6px 0;}
+.func-btn{flex:1;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:11px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .2s;}
+.func-btn:active{transform:scale(.92);background:rgba(255,255,255,.18);}
+.func-btn .fi{font-size:18px;}
+.func-btn .ft{font-size:9px;color:rgba(255,255,255,.85);margin-top:2px;font-weight:bold;}
+
+.daily-panel{width:100%;max-width:380px;background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,107,107,.1));backdrop-filter:blur(10px);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:8px 10px;margin-bottom:6px;}
+.daily-title{font-size:10px;color:#ffd700;font-weight:bold;margin-bottom:4px;display:flex;align-items:center;gap:4px;}
+.daily-list{display:flex;flex-direction:column;gap:3px;}
+.daily-item{display:flex;align-items:center;gap:6px;font-size:9px;color:rgba(255,255,255,.8);}
+.daily-item .check{width:12px;height:12px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:7px;}
+.daily-item.done .check{background:#27ae60;border-color:#27ae60;color:#fff;}
+.daily-item .reward{margin-left:auto;color:#ffd700;font-size:8px;}
+
+.footer-info{text-align:center;font-size:8px;color:rgba(255,255,255,.4);margin-top:auto;padding-top:5px;line-height:1.6;}
+
+/* ===== 关卡选择 ===== */
+#levelSelect{position:absolute;inset:0;z-index:20;overflow-y:auto;display:none;}
+.level-bg{position:absolute;inset:0;}
+.level-content{position:relative;z-index:2;padding:26px 16px;min-height:100%;}
+.level-header{text-align:center;margin-bottom:12px;}
+.level-header h2{font-size:23px;color:#fff;font-weight:900;text-shadow:0 2px 10px rgba(0,0,0,.3);}
+.level-header p{font-size:11px;color:rgba(255,255,255,.65);margin-top:3px;}
+.mode-badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:10px;color:#fff;font-weight:bold;margin-top:5px;}
+.level-stats{display:flex;justify-content:center;gap:12px;margin:8px 0;}
+.ls-item{text-align:center;}
+.ls-item .n{font-size:18px;font-weight:bold;color:#ffd700;}
+.ls-item .l{font-size:9px;color:rgba(255,255,255,.6);}
+.level-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%;max-width:380px;margin:0 auto;}
+.level-card{border-radius:14px;padding:12px 8px;cursor:pointer;transition:all .2s;border:2px solid rgba(255,255,255,.25);position:relative;overflow:hidden;min-height:95px;}
+.level-card:active{transform:scale(.95);}
+.level-card.locked{opacity:.45;cursor:not-allowed;}
+.level-card .lc-num{font-size:24px;font-weight:900;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.3);}
+.level-card .lc-name{font-size:11px;color:rgba(255,255,255,.95);font-weight:bold;margin-top:2px;}
+.level-card .lc-desc{font-size:8px;color:rgba(255,255,255,.75);margin-top:2px;line-height:1.4;}
+.level-card .lc-stars{font-size:10px;margin-top:4px;}
+.level-card .lc-quiz{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.35);border-radius:7px;padding:2px 5px;font-size:8px;color:#ffd700;font-weight:bold;}
+.back-btn{display:block;margin:16px auto 0;padding:9px 28px;border-radius:18px;background:rgba(255,255,255,.12);color:#fff;font-size:13px;border:1px solid rgba(255,255,255,.2);cursor:pointer;backdrop-filter:blur(10px);}
+
+/* ===== HUD ===== */
+#hud{position:absolute;top:0;left:0;right:0;padding:8px 11px;display:none;justify-content:space-between;align-items:center;z-index:15;pointer-events:none;}
+.hud-item{background:rgba(0,0,0,.45);backdrop-filter:blur(10px);border-radius:10px;padding:4px 8px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:bold;color:#fff;border:1px solid rgba(255,255,255,.12);}
+.hud-item .ic{font-size:13px;}
+.hud-center{text-align:center;}
+.hud-level{font-size:11px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);font-weight:bold;}
+.hud-levelname{font-size:9px;color:rgba(255,255,255,.8);}
+#pauseBtn{position:absolute;top:8px;right:11px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.15);display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;z-index:16;color:#fff;}
+
+/* ===== 触屏控制 ===== */
+#touchControls{position:absolute;bottom:0;left:0;right:0;display:none;justify-content:space-between;padding:14px;z-index:12;pointer-events:none;}
+.touch-group{display:flex;gap:8px;pointer-events:auto;}
+.touch-btn{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;backdrop-filter:blur(10px);}
+.touch-btn:active{background:rgba(255,255,255,.35);transform:scale(.92);}
+.touch-btn.jump{width:64px;height:64px;background:rgba(255,215,0,.28);border-color:rgba(255,215,0,.5);font-size:24px;}
+
+/* ===== 知识气泡 ===== */
+#knowledgeBubble{position:absolute;top:55px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#fff9e6,#fff3cd);border:2px solid #ffd700;border-radius:12px;padding:8px 13px;z-index:14;pointer-events:none;opacity:0;transition:all .4s;max-width:88%;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.25);}
+#knowledgeBubble.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#knowledgeBubble .k-title{font-size:10px;color:#e67e22;font-weight:bold;margin-bottom:2px;}
+#knowledgeBubble .k-text{font-size:11px;color:#856404;line-height:1.5;}
+
+/* ===== 答题弹窗 ===== */
+.modal{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:30;}
+.quiz-box{background:linear-gradient(135deg,#fff,#f0f4ff);border-radius:20px;padding:20px 16px;width:90%;max-width:350px;box-shadow:0 20px 60px rgba(0,0,0,.5);border:3px solid #ffd700;position:relative;overflow:hidden;}
+.quiz-box::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#ffd700,#ff6b6b,#4facfe,#a855f7,#ffd700);background-size:200% 100%;animation:quizBar 2s linear infinite;}
+@keyframes quizBar{0%{background-position:0% 0}100%{background-position:200% 0}}
+.quiz-header{text-align:center;margin-bottom:10px;}
+.quiz-header .icon{font-size:32px;margin-bottom:3px;}
+.quiz-header h3{font-size:16px;color:#333;font-weight:900;}
+.quiz-header .tag{font-size:9px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:2px 9px;border-radius:9px;display:inline-block;margin-top:4px;font-weight:bold;}
+.quiz-q{font-size:13px;color:#333;line-height:1.6;margin-bottom:10px;text-align:center;font-weight:bold;}
+.quiz-opts{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.quiz-opt{padding:10px 11px;border-radius:10px;border:2px solid #e0e0e8;background:#fff;font-size:11px;cursor:pointer;transition:all .15s;text-align:left;line-height:1.5;color:#333;}
+.quiz-opt:active{transform:scale(.98);}
+.quiz-opt.correct{border-color:#27ae60;background:#e8f8f0;color:#1e8449;}
+.quiz-opt.wrong{border-color:#e74c3c;background:#fdecea;color:#c0392b;}
+.quiz-opt.disabled{pointer-events:none;opacity:.6;}
+.quiz-feedback{padding:8px;border-radius:9px;font-size:10px;line-height:1.6;margin-bottom:8px;display:none;}
+.quiz-feedback.show{display:block;}
+.quiz-feedback.good{background:#e8f8f0;color:#1e8449;border:1px solid #a9dfbf;}
+.quiz-feedback.bad{background:#fdecea;color:#c0392b;border:1px solid #f5b7b1;}
+.quiz-continue{width:100%;padding:10px;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:13px;font-weight:bold;border:none;cursor:pointer;display:none;}
+.quiz-continue.show{display:block;}
+.quiz-reward{text-align:center;font-size:11px;font-weight:bold;color:#e67e22;margin-bottom:7px;display:none;}
+.quiz-reward.show{display:block;}
+
+/* ===== 纯答题/限时挑战 通用答题界面 ===== */
+#quizScreen{position:absolute;inset:0;z-index:20;display:none;flex-direction:column;overflow:hidden;}
+.qs-bg{position:absolute;inset:0;}
+.qs-content{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;padding:14px;overflow-y:auto;}
+.qs-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.qs-back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;color:#fff;}
+.qs-title{font-size:14px;color:#fff;font-weight:bold;text-shadow:0 1px 4px rgba(0,0,0,.3);}
+.qs-stats{display:flex;gap:5px;}
+.qs-stat{background:rgba(0,0,0,.35);backdrop-filter:blur(10px);border-radius:9px;padding:3px 8px;font-size:11px;font-weight:bold;color:#fff;display:flex;align-items:center;gap:3px;border:1px solid rgba(255,255,255,.15);}
+.qs-stat.timer{background:rgba(255,107,107,.4);border-color:rgba(255,107,107,.5);}
+.qs-stat.combo{background:rgba(255,215,0,.35);border-color:rgba(255,215,0,.5);}
+.qs-progress{width:100%;height:7px;background:rgba(0,0,0,.3);border-radius:4px;margin-bottom:10px;overflow:hidden;}
+.qs-progress-bar{height:100%;background:linear-gradient(90deg,#ffd700,#ff6b6b,#4facfe);border-radius:4px;transition:width .4s;}
+.qs-qnum{text-align:center;font-size:11px;color:rgba(255,255,255,.8);margin-bottom:8px;font-weight:bold;}
+.qs-card{background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(240,244,255,.95));border-radius:16px;padding:16px 14px;margin-bottom:10px;box-shadow:0 10px 30px rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.5);}
+.qs-card .qs-qicon{font-size:26px;text-align:center;margin-bottom:5px;}
+.qs-card .qs-qtext{font-size:13px;color:#333;line-height:1.7;text-align:center;font-weight:bold;}
+.qs-options{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.qs-opt{padding:12px 13px;border-radius:12px;font-size:12px;cursor:pointer;transition:all .15s;text-align:left;line-height:1.5;color:#fff;font-weight:bold;border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;gap:9px;}
+.qs-opt:active{transform:scale(.98);}
+.qs-opt .opt-letter{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;}
+.qs-opt.a{background:linear-gradient(135deg,#ff6b6b,#ee5a5a);}
+.qs-opt.b{background:linear-gradient(135deg,#4facfe,#00c6fb);}
+.qs-opt.c{background:linear-gradient(135deg,#43e97b,#38f9d7);color:#1a5c2e;}
+.qs-opt.c .opt-letter{background:rgba(255,255,255,.4);}
+.qs-opt.d{background:linear-gradient(135deg,#fa709a,#fee140);color:#7a3a00;}
+.qs-opt.d .opt-letter{background:rgba(255,255,255,.4);}
+.qs-opt.correct{animation:correctPulse .5s;box-shadow:0 0 20px rgba(39,174,96,.6);}
+.qs-opt.wrong{animation:wrongShake .4s;opacity:.7;}
+@keyframes correctPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes wrongShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.qs-opt.disabled{pointer-events:none;}
+.qs-explain{background:linear-gradient(135deg,#fff9e6,#fff3cd);border-radius:11px;padding:10px 12px;margin-bottom:8px;display:none;border:1px solid #ffd700;}
+.qs-explain.show{display:block;animation:fadeIn .3s;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.qs-explain .qe-title{font-size:10px;font-weight:bold;margin-bottom:3px;}
+.qs-explain.good .qe-title{color:#27ae60;}
+.qs-explain.bad .qe-title{color:#e74c3c;}
+.qs-explain .qe-text{font-size:11px;line-height:1.6;color:#666;}
+.qs-next-btn{width:100%;padding:12px;border-radius:13px;background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;font-size:14px;font-weight:bold;border:none;cursor:pointer;display:none;box-shadow:0 6px 20px rgba(168,85,247,.4);}
+.qs-next-btn.show{display:block;animation:fadeIn .3s;}
+
+/* ===== 幸运转盘模式 ===== */
+#wheelScreen{position:absolute;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;overflow:hidden;}
+.ws-bg{position:absolute;inset:0;background:linear-gradient(180deg,#2d1b69,#6b1b69,#8b2a5a);}
+.ws-content{position:relative;z-index:2;width:100%;padding:20px 16px;display:flex;flex-direction:column;align-items:center;flex:1;overflow-y:auto;}
+.ws-top{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.ws-title{font-size:18px;color:#fff;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.3);}
+.ws-score{background:rgba(0,0,0,.35);border-radius:10px;padding:4px 10px;font-size:12px;font-weight:bold;color:#ffd700;border:1px solid rgba(255,215,0,.3);}
+.wheel-wrap{position:relative;width:280px;height:280px;margin:10px 0;}
+.wheel-pointer{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid #ffd700;z-index:5;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));}
+.wheel{width:280px;height:280px;border-radius:50%;position:relative;transition:transform 4s cubic-bezier(.17,.67,.12,.99);box-shadow:0 0 30px rgba(255,215,0,.4),inset 0 0 20px rgba(0,0,0,.2);border:6px solid #ffd700;}
+.wheel-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#ffd700,#ff8c00);display:flex;align-items:center;justify-content:center;font-size:22px;z-index:3;box-shadow:0 4px 15px rgba(0,0,0,.3);cursor:pointer;}
+.wheel-center:active{transform:translate(-50%,-50%) scale(.9);}
+.ws-hint{font-size:12px;color:rgba(255,255,255,.8);text-align:center;margin:8px 0;}
+.ws-question{width:100%;max-width:340px;background:rgba(255,255,255,.95);border-radius:14px;padding:14px;margin-top:10px;display:none;}
+.ws-question.show{display:block;animation:fadeIn .3s;}
+.ws-qtitle{font-size:11px;color:#a855f7;font-weight:bold;margin-bottom:6px;text-align:center;}
+.ws-qtext{font-size:13px;color:#333;line-height:1.6;text-align:center;font-weight:bold;margin-bottom:10px;}
+.ws-qopts{display:flex;flex-direction:column;gap:6px;}
+.ws-qopt{padding:9px 11px;border-radius:9px;font-size:11px;cursor:pointer;transition:all .15s;text-align:left;line-height:1.5;color:#fff;font-weight:bold;border:2px solid rgba(255,255,255,.3);}
+.ws-qopt:active{transform:scale(.98);}
+.ws-qopt.a{background:linear-gradient(135deg,#ff6b6b,#ee5a5a);}
+.ws-qopt.b{background:linear-gradient(135deg,#4facfe,#00c6fb);}
+.ws-qopt.c{background:linear-gradient(135deg,#43e97b,#38f9d7);color:#1a5c2e;}
+.ws-qopt.d{background:linear-gradient(135deg,#fa709a,#fee140);color:#7a3a00;}
+.ws-qopt.correct{box-shadow:0 0 15px rgba(39,174,96,.6);}
+.ws-qopt.wrong{opacity:.6;}
+.ws-qopt.disabled{pointer-events:none;}
+.ws-result{width:100%;max-width:340px;background:rgba(255,255,255,.95);border-radius:14px;padding:14px;margin-top:10px;text-align:center;display:none;}
+.ws-result.show{display:block;animation:fadeIn .3s;}
+.ws-result .wr-icon{font-size:36px;margin-bottom:6px;}
+.ws-result .wr-text{font-size:13px;color:#333;line-height:1.6;margin-bottom:10px;}
+.ws-result .wr-btn{padding:10px 24px;border-radius:12px;background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;font-size:13px;font-weight:bold;border:none;cursor:pointer;margin:3px;}
+
+/* ===== 通用弹窗 ===== */
+.modal-box{background:linear-gradient(135deg,#fff,#f0f0ff);border-radius:20px;padding:22px 18px;width:85%;max-width:330px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+.modal-box .icon{font-size:48px;margin-bottom:7px;}
+.modal-box h2{font-size:19px;color:#333;margin-bottom:5px;}
+.modal-box p{font-size:12px;color:#666;line-height:1.7;margin-bottom:12px;}
+.modal-stats{display:flex;justify-content:space-around;margin-bottom:10px;padding:9px 0;border-top:1px dashed #ddd;border-bottom:1px dashed #ddd;}
+.modal-stat .n{font-size:20px;font-weight:bold;color:#f39c12;}
+.modal-stat .l{font-size:9px;color:#999;}
+.modal-knowledge{background:#fff9e6;border-radius:9px;padding:8px;margin-bottom:10px;text-align:left;}
+.modal-knowledge .kt{font-size:9px;color:#e67e22;font-weight:bold;margin-bottom:3px;}
+.modal-knowledge .ki{font-size:10px;color:#856404;line-height:1.6;}
+.modal-btn{padding:10px 22px;border-radius:20px;font-size:13px;font-weight:bold;border:none;cursor:pointer;margin:3px;}
+.modal-btn.primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;}
+.modal-btn.gold{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#5a3a00;}
+.modal-btn.gray{background:#e0e0e8;color:#666;}
+.modal-btn.purple{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;}
+.modal-btn.green{background:linear-gradient(135deg,#43e97b,#38f9d7);color:#1a5c2e;}
+
+#hintBubble{position:absolute;top:68px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;padding:7px 14px;border-radius:16px;font-size:11px;z-index:14;pointer-events:none;opacity:0;transition:opacity .3s;max-width:82%;text-align:center;backdrop-filter:blur(10px);}
+#hintBubble.show{opacity:1;}
+
+#shareModal{position:absolute;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:40;}
+.share-box{background:linear-gradient(135deg,#fff,#f0f4ff);border-radius:20px;padding:20px 16px;width:85%;max-width:310px;text-align:center;}
+.share-box h3{font-size:16px;color:#333;margin-bottom:8px;}
+.share-box p{font-size:11px;color:#666;margin-bottom:10px;line-height:1.6;}
+.share-tips{font-size:10px;color:#999;margin-bottom:10px;line-height:1.7;text-align:left;background:#f8f8f8;padding:9px;border-radius:9px;}
+</style>
+</head>
+<body>
+<div id="gameWrap">
+  <canvas id="game"></canvas>
+
+  <!-- 首页大厅 -->
+  <div id="startScreen">
+    <canvas id="startCanvas"></canvas>
+    <div class="start-content">
+      <div class="top-bar">
+        <div class="top-badge">🏆 社区AI乐园参赛作品</div>
+        <div class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔊</div>
+      </div>
+      <div class="game-logo">
+        <div class="icon">🛡️</div>
+        <h1>反诈大冒险</h1>
+        <div class="subtitle">四 模 式 游 戏 大 厅</div>
+        <div class="tagline">✨ 跑酷·答题·限时·转盘 四种玩法 ✨</div>
+      </div>
+
+      <!-- 四模式大厅 -->
+      <div class="mode-hall">
+        <div class="hall-card m1" onclick="selectMode('run')">
+          <div class="h-tag">热门</div>
+          <div class="h-icon">🏃</div>
+          <div class="h-title">跑酷答题</div>
+          <div class="h-desc">跳跃躲陷阱<br>每段路答题</div>
+        </div>
+        <div class="hall-card m2" onclick="selectMode('quiz')">
+          <div class="h-tag">经典</div>
+          <div class="h-icon">📝</div>
+          <div class="h-title">纯答题</div>
+          <div class="h-desc">专注知识答题<br>逐题详细解析</div>
+        </div>
+        <div class="hall-card m3" onclick="startTimedMode()">
+          <div class="h-tag">刺激</div>
+          <div class="h-icon">⏱️</div>
+          <div class="h-title">限时挑战</div>
+          <div class="h-desc">60秒竞速<br>连击加倍得分</div>
+        </div>
+        <div class="hall-card m4" onclick="startWheelMode()">
+          <div class="h-tag">幸运</div>
+          <div class="h-icon">🎰</div>
+          <div class="h-title">幸运转盘</div>
+          <div class="h-desc">转盘选题型<br>答对赢金币</div>
+        </div>
+      </div>
+
+      <div class="func-row">
+        <div class="func-btn" onclick="showShare()"><div class="fi">📤</div><div class="ft">分享好友</div></div>
+        <div class="func-btn" onclick="showHelp()"><div class="fi">❓</div><div class="ft">玩法说明</div></div>
+        <div class="func-btn" onclick="toggleSound()"><div class="fi" id="soundIcon">🔊</div><div class="ft">声音开关</div></div>
+        <div class="func-btn" onclick="showAbout()"><div class="fi">ℹ️</div><div class="ft">关于作品</div></div>
+      </div>
+
+      <div class="daily-panel">
+        <div class="daily-title">📋 今日反诈任务</div>
+        <div class="daily-list">
+          <div class="daily-item done"><div class="check">✓</div>学习1条反诈知识<span class="reward">+10💰</span></div>
+          <div class="daily-item done"><div class="check">✓</div>完成1次答题挑战<span class="reward">+20💰</span></div>
+          <div class="daily-item"><div class="check"></div>体验全部4种模式<span class="reward">🏆</span></div>
+          <div class="daily-item"><div class="check"></div>限时挑战得100分<span class="reward">+50💰</span></div>
+        </div>
+      </div>
+
+      <div class="footer-info">
+        社区AI乐园——家门口的科技馆 · 反诈主题作品<br>
+        学生+家长共同创作 · AI辅助设计已标注
+      </div>
+    </div>
+  </div>
+
+  <!-- 关卡选择 -->
+  <div id="levelSelect">
+    <div class="level-bg" id="levelBg"></div>
+    <div class="level-content">
+      <div class="level-header">
+        <h2 id="levelSelectTitle">🗺️ 冒险地图</h2>
+        <p id="levelSelectSub">选择关卡开始挑战</p>
+        <div class="mode-badge" id="modeBadge"></div>
+      </div>
+      <div class="level-stats">
+        <div class="ls-item"><div class="n" id="statCoins">0</div><div class="l">金币/分</div></div>
+        <div class="ls-item"><div class="n" id="statStars">0</div><div class="l">徽章</div></div>
+        <div class="ls-item"><div class="n" id="statQuiz">0</div><div class="l">答对题</div></div>
+      </div>
+      <div class="level-grid" id="levelGrid"></div>
+      <button class="back-btn" onclick="backToStart()">← 返回大厅</button>
+    </div>
+  </div>
+
+  <!-- 跑酷HUD -->
+  <div id="hud">
+    <div style="display:flex;gap:5px;">
+      <div class="hud-item"><span class="ic">❤️</span><span id="hudLives">3</span></div>
+      <div class="hud-item"><span class="ic">💰</span><span id="hudCoins">0</span></div>
+    </div>
+    <div class="hud-center">
+      <div class="hud-level" id="hudLevel">第1关</div>
+      <div class="hud-levelname" id="hudLevelName">社区入门</div>
+    </div>
+    <div class="hud-item"><span class="ic">⭐</span><span id="hudStars">0/3</span></div>
+  </div>
+  <div id="pauseBtn" onclick="pauseGame()">⏸️</div>
+  <div id="hintBubble"></div>
+  <div id="knowledgeBubble">
+    <div class="k-title">💡 反诈小知识</div>
+    <div class="k-text" id="knowledgeText"></div>
+  </div>
+
+  <!-- 触屏控制 -->
+  <div id="touchControls">
+    <div class="touch-group">
+      <div class="touch-btn" id="btnLeft">⬅️</div>
+      <div class="touch-btn" id="btnRight">➡️</div>
+    </div>
+    <div class="touch-group">
+      <div class="touch-btn jump" id="btnJump">⬆️</div>
+    </div>
+  </div>
+
+  <!-- 跑酷答题弹窗 -->
+  <div class="modal" id="quizModal" style="display:none;">
+    <div class="quiz-box">
+      <div class="quiz-header">
+        <div class="icon">📦</div>
+        <h3>反诈知识问答</h3>
+        <span class="tag" id="quizTag">第1关</span>
+      </div>
+      <div class="quiz-q" id="quizQuestion"></div>
+      <div class="quiz-opts" id="quizOpts"></div>
+      <div class="quiz-reward" id="quizReward"></div>
+      <div class="quiz-feedback" id="quizFeedback"></div>
+      <button class="quiz-continue" id="quizContinue" onclick="closeQuiz()">继续冒险 →</button>
+    </div>
+  </div>
+
+  <!-- 纯答题/限时挑战 答题界面 -->
+  <div id="quizScreen">
+    <div class="qs-bg" id="qsBg"></div>
+    <div class="qs-content">
+      <div class="qs-top">
+        <div class="qs-back" onclick="quitQuizScreen()">←</div>
+        <div class="qs-title" id="qsTitle">第1关 · 社区入门</div>
+        <div class="qs-stats">
+          <div class="qs-stat" id="qsLivesBox">❤️<span id="qsLives">3</span></div>
+          <div class="qs-stat">💰<span id="qsScore">0</span></div>
+        </div>
+      </div>
+      <div class="qs-progress"><div class="qs-progress-bar" id="qsProgress" style="width:0%"></div></div>
+      <div class="qs-qnum" id="qsQnum">第 1 / 5 题</div>
+      <div class="qs-card">
+        <div class="qs-qicon" id="qsQicon">🤔</div>
+        <div class="qs-qtext" id="qsQtext"></div>
+      </div>
+      <div class="qs-options" id="qsOptions"></div>
+      <div class="qs-explain" id="qsExplain">
+        <div class="qe-title" id="qsExplainTitle"></div>
+        <div class="qe-text" id="qsExplainText"></div>
+      </div>
+      <button class="qs-next-btn" id="qsNextBtn" onclick="quizNext()">下一题 →</button>
+    </div>
+  </div>
+
+  <!-- 幸运转盘界面 -->
+  <div id="wheelScreen">
+    <div class="ws-bg"></div>
+    <div class="ws-content">
+      <div class="ws-top">
+        <div class="qs-back" onclick="quitWheelMode()">←</div>
+        <div class="ws-title">🎰 幸运转盘</div>
+        <div class="ws-score">💰 <span id="wsScore">0</span></div>
+      </div>
+      <div class="wheel-wrap">
+        <div class="wheel-pointer"></div>
+        <div class="wheel" id="wheel"></div>
+        <div class="wheel-center" onclick="spinWheel()">GO</div>
+      </div>
+      <div class="ws-hint" id="wsHint">点击中间 GO 转动转盘，转到什么题型就答什么题！</div>
+      <div class="ws-question" id="wsQuestion">
+        <div class="ws-qtitle" id="wsQtitle"></div>
+        <div class="ws-qtext" id="wsQtext"></div>
+        <div class="ws-qopts" id="wsQopts"></div>
+      </div>
+      <div class="ws-result" id="wsResult">
+        <div class="wr-icon" id="wsRicon"></div>
+        <div class="wr-text" id="wsRtext"></div>
+        <button class="wr-btn" onclick="wheelContinue()">继续转盘 🎰</button>
+        <button class="wr-btn" style="background:#e0e0e8;color:#666;" onclick="quitWheelMode()">返回大厅</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 暂停弹窗 -->
+  <div class="modal" id="pauseModal" style="display:none;">
+    <div class="modal-box">
+      <div class="icon">⏸️</div>
+      <h2>游戏暂停</h2>
+      <p>休息一下，准备好再继续！</p>
+      <button class="modal-btn primary" onclick="resumeGame()">▶️ 继续游戏</button>
+      <button class="modal-btn gray" onclick="restartLevel()">🔄 重玩本关</button>
+      <button class="modal-btn gray" onclick="quitToMenu()">🏠 返回大厅</button>
+    </div>
+  </div>
+
+  <!-- 过关弹窗 -->
+  <div class="modal" id="winModal" style="display:none;">
+    <div class="modal-box">
+      <div class="icon">🎉</div>
+      <h2 id="winTitle">关卡通过！</h2>
+      <p id="winMsg">太棒了！</p>
+      <div class="modal-stats">
+        <div class="modal-stat"><div class="n" id="winCoins">0</div><div class="l">金币/分</div></div>
+        <div class="modal-stat"><div class="n" id="winStars">0</div><div class="l">徽章</div></div>
+        <div class="modal-stat"><div class="n" id="winQuiz">0</div><div class="l">答对题</div></div>
+      </div>
+      <div class="modal-knowledge">
+        <div class="kt">📚 本关学到的反诈知识</div>
+        <div class="ki" id="winKnowledgeText"></div>
+      </div>
+      <button class="modal-btn gold" id="winNextBtn" onclick="nextLevel()">➡️ 下一关</button>
+      <button class="modal-btn gray" onclick="restartLevel()">🔄 再玩一次</button>
+      <button class="modal-btn gray" onclick="quitToMenu()">🏠 大厅</button>
+    </div>
+  </div>
+
+  <!-- 失败弹窗 -->
+  <div class="modal" id="loseModal" style="display:none;">
+    <div class="modal-box">
+      <div class="icon">💔</div>
+      <h2>挑战失败</h2>
+      <p>别灰心，再试一次一定能行！</p>
+      <div class="modal-knowledge">
+        <div class="kt">💡 记住这个反诈知识</div>
+        <div class="ki" id="loseKnowledge">凡是要求转账的，一定要核实！</div>
+      </div>
+      <button class="modal-btn primary" onclick="restartLevel()">🔄 重新挑战</button>
+      <button class="modal-btn gray" onclick="quitToMenu()">🏠 大厅</button>
+    </div>
+  </div>
+
+  <!-- 通关弹窗 -->
+  <div class="modal" id="finalModal" style="display:none;">
+    <div class="modal-box">
+      <div class="icon">👑</div>
+      <h2>恭喜全部通关！</h2>
+      <p>你已经成为真正的<br><strong style="color:#e67e22;font-size:16px;">社区反诈守护者</strong>！</p>
+      <div class="modal-stats">
+        <div class="modal-stat"><div class="n" id="finalCoins">0</div><div class="l">总分</div></div>
+        <div class="modal-stat"><div class="n" id="finalStars">0</div><div class="l">徽章</div></div>
+        <div class="modal-stat"><div class="n" id="finalQuiz">0</div><div class="l">答对题</div></div>
+      </div>
+      <button class="modal-btn gold" onclick="quitToMenu()">🏠 返回大厅</button>
+    </div>
+  </div>
+
+  <!-- 限时挑战结算 -->
+  <div class="modal" id="timedResultModal" style="display:none;">
+    <div class="modal-box">
+      <div class="icon">⏱️</div>
+      <h2>时间到！</h2>
+      <div class="modal-stats">
+        <div class="modal-stat"><div class="n" id="trScore">0</div><div class="l">得分</div></div>
+        <div class="modal-stat"><div class="n" id="trCorrect">0</div><div class="l">答对</div></div>
+        <div class="modal-stat"><div class="n" id="trCombo">0</div><div class="l">最高连击</div></div>
+      </div>
+      <p id="trRank">继续努力！</p>
+      <button class="modal-btn green" onclick="startTimedMode()">🔄 再来一局</button>
+      <button class="modal-btn gray" onclick="quitToMenu()">🏠 大厅</button>
+    </div>
+  </div>
+
+  <!-- 分享弹窗 -->
+  <div class="modal" id="shareModal" style="display:none;">
+    <div class="share-box">
+      <h3>📤 分享给好友</h3>
+      <p>4种玩法全家都能玩，一起学反诈！</p>
+      <div class="share-tips">
+        💡 <strong>微信分享：</strong><br>
+        1. 保存HTML文件 → 微信发文件<br>
+        2. 好友下载后浏览器打开即玩<br>
+        3. 跑酷/答题/限时/转盘 四种模式
+      </div>
+      <button class="modal-btn purple" onclick="closeShare()">知道了</button>
+    </div>
+  </div>
+
+  <!-- 关于弹窗 -->
+  <div class="modal" id="helpModal" style="display:none;">
+    <div class="share-box">
+      <h3>🎮 四模式玩法说明</h3>
+      <div class="share-tips" style="text-align:left;">
+        <strong>🏃 跑酷答题：</strong>跳跃躲陷阱，每段路碰到宝箱答题<br>
+        <strong>📝 纯答题：</strong>专注答题，逐题解析，3条命<br>
+        <strong>⏱️ 限时挑战：</strong>60秒竞速，连击加倍得分，答错扣3秒<br>
+        <strong>🎰 幸运转盘：</strong>转盘选题型，答对赢金币<br><br>
+        电脑：方向键/WASD 移动，空格跳跃，Esc 暂停。手机：屏幕下方按键。<br>
+        四种玩法都能学反诈知识，全家都能玩！
+      </div>
+      <button class="modal-btn purple" onclick="closeHelp()">知道了</button>
+    </div>
+  </div>
+  <div class="modal" id="aboutModal" style="display:none;">
+    <div class="share-box">
+      <h3>ℹ️ 关于本作品</h3>
+      <div class="share-tips" style="text-align:left;">
+        <strong>作品名称：</strong>反诈大冒险<br>
+        <strong>参赛主题：</strong>社区AI乐园——家门口的科技馆<br>
+        <strong>作品类型：</strong>家庭编程互动作品<br>
+        <strong>游戏模式：</strong>4种（跑酷答题/纯答题/限时挑战/幸运转盘）<br>
+        <strong>反诈题目：</strong><span id="aboutQCount">75</span>道，覆盖电话/短信/公检法/理财/养老等<br>
+        <strong>技术实现：</strong>HTML5 Canvas + Web Audio API<br>
+        <strong>AI使用：</strong>AI辅助方案设计与代码实现，核心创意与逻辑为原创
+      </div>
+      <button class="modal-btn purple" onclick="closeAbout()">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 首页粒子背景 ====================
+const startCanvas=document.getElementById('startCanvas');
+const sctx=startCanvas.getContext('2d');
+let startParticles=[];
+function resizeStartCanvas(){startCanvas.width=startCanvas.offsetWidth;startCanvas.height=startCanvas.offsetHeight;}
+function fitGame(){const vw=window.innerWidth,vh=window.innerHeight;const sc=Math.min(vw/480,vh/800);document.documentElement.style.setProperty('--scale',sc);resizeStartCanvas();}
+fitGame();window.addEventListener('resize',fitGame);window.addEventListener('orientationchange',()=>setTimeout(fitGame,100));
+const pColors=['#ffd700','#ff6b6b','#4facfe','#00f2fe','#a855f7','#43e97b','#fa709a','#feca57'];
+for(let i=0;i<55;i++){startParticles.push({x:Math.random()*480,y:Math.random()*800,vx:(Math.random()-.5)*.6,vy:(Math.random()-.5)*.6,r:Math.random()*3.5+1,color:pColors[Math.floor(Math.random()*pColors.length)],alpha:Math.random()*.5+.2});}
+function drawStartBg(){
+  sctx.clearRect(0,0,startCanvas.width,startCanvas.height);
+  const g=sctx.createLinearGradient(0,0,0,startCanvas.height);
+  g.addColorStop(0,'#1a0a3e');g.addColorStop(.25,'#3d1b69');g.addColorStop(.5,'#6b1b69');g.addColorStop(.75,'#8b2a5a');g.addColorStop(1,'#5a1a4a');
+  sctx.fillStyle=g;sctx.fillRect(0,0,startCanvas.width,startCanvas.height);
+  const t=Date.now()/3000;
+  const glows=[{x:.15,y:.2,r:120,c:'rgba(255,107,107,.1)'},{x:.85,y:.3,r:100,c:'rgba(79,172,254,.1)'},{x:.5,y:.6,r:130,c:'rgba(255,215,0,.07)'},{x:.1,y:.75,r:85,c:'rgba(168,85,247,.12)'},{x:.9,y:.8,r:95,c:'rgba(67,233,123,.08)'},{x:.5,y:.15,r:70,c:'rgba(250,112,154,.1)'}];
+  for(const gl of glows){sctx.fillStyle=gl.c;sctx.beginPath();sctx.arc(startCanvas.width*gl.x+Math.sin(t+gl.x*10)*25,startCanvas.height*gl.y+Math.cos(t+gl.y*10)*20,gl.r,0,Math.PI*2);sctx.fill();}
+  for(const p of startParticles){p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=startCanvas.width;if(p.x>startCanvas.width)p.x=0;if(p.y<0)p.y=startCanvas.height;if(p.y>startCanvas.height)p.y=0;sctx.globalAlpha=p.alpha;sctx.fillStyle=p.color;sctx.beginPath();sctx.arc(p.x,p.y,p.r,0,Math.PI*2);sctx.fill();}
+  sctx.globalAlpha=1;requestAnimationFrame(drawStartBg);
+}
+drawStartBg();
+
+// ==================== 音效系统 ====================
+let audioCtx=null,soundOn=true,musicGain=null,musicPlaying=false;
+function initAudio(){if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();musicGain=audioCtx.createGain();musicGain.gain.value=0.1;musicGain.connect(audioCtx.destination);}}
+function playTone(freq,dur,type='sine',vol=0.2){if(!soundOn||!audioCtx)return;const osc=audioCtx.createOscillator();const gain=audioCtx.createGain();osc.type=type;osc.frequency.value=freq;gain.gain.setValueAtTime(vol,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);osc.connect(gain);gain.connect(audioCtx.destination);osc.start();osc.stop(audioCtx.currentTime+dur);}
+function sfxJump(){playTone(400,0.12,'square',0.13);setTimeout(()=>playTone(600,0.1,'square',0.1),50);}
+function sfxCoin(){playTone(880,0.08,'sine',0.18);setTimeout(()=>playTone(1320,0.12,'sine',0.15),60);}
+function sfxStar(){playTone(660,0.1,'triangle',0.18);setTimeout(()=>playTone(880,0.1,'triangle',0.18),80);setTimeout(()=>playTone(1100,0.15,'triangle',0.18),160);}
+function sfxHurt(){playTone(200,0.2,'sawtooth',0.18);setTimeout(()=>playTone(150,0.25,'sawtooth',0.15),100);}
+function sfxWin(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,0.2,'triangle',0.18),i*120));}
+function sfxLose(){[400,350,300,200].forEach((f,i)=>setTimeout(()=>playTone(f,0.25,'sawtooth',0.13),i*150));}
+function sfxQuiz(){playTone(700,0.15,'triangle',0.16);setTimeout(()=>playTone(900,0.2,'triangle',0.13),100);}
+function sfxCorrect(){playTone(523,0.1,'sine',0.18);setTimeout(()=>playTone(659,0.1,'sine',0.18),100);setTimeout(()=>playTone(784,0.2,'sine',0.18),200);}
+function sfxWrong(){playTone(300,0.15,'sawtooth',0.16);setTimeout(()=>playTone(200,0.2,'sawtooth',0.13),120);}
+function sfxClick(){playTone(600,0.05,'square',0.08);}
+function sfxSpin(){for(let i=0;i<8;i++)setTimeout(()=>playTone(400+i*50,0.05,'square',0.08),i*60);}
+let musicInterval=null,musicStep=0;
+// 打乱题目选项，让正确答案随机分布
+function shuffleQuestion(q){
+  const opts=[...q.opts];const correctText=opts[q.answer];
+  for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+  return {q:q.q,opts:opts,answer:opts.indexOf(correctText),explain:q.explain};
+}
+const melody=[262,294,330,349,392,440,494,523,494,440,392,349,330,294,262,294,330,392,440,523];
+function startMusic(){if(!soundOn||musicPlaying)return;initAudio();musicPlaying=true;musicStep=0;musicInterval=setInterval(()=>{if(!soundOn)return;const f=melody[musicStep%melody.length];const osc=audioCtx.createOscillator();const g=audioCtx.createGain();osc.type='triangle';osc.frequency.value=f;g.gain.setValueAtTime(0.06,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.28);osc.connect(g);g.connect(musicGain);osc.start();osc.stop(audioCtx.currentTime+0.28);if(musicStep%2===0){const bass=audioCtx.createOscillator();const bg=audioCtx.createGain();bass.type='sine';bass.frequency.value=f/2;bg.gain.setValueAtTime(0.04,audioCtx.currentTime);bg.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.4);bass.connect(bg);bg.connect(musicGain);bass.start();bass.stop(audioCtx.currentTime+0.4);}musicStep++;},260);}
+function stopMusic(){musicPlaying=false;if(musicInterval){clearInterval(musicInterval);musicInterval=null;}}
+function toggleSound(){soundOn=!soundOn;document.getElementById('soundToggle').textContent=soundOn?'🔊':'🔇';document.getElementById('soundIcon').textContent=soundOn?'🔊':'🔇';if(soundOn)startMusic();else stopMusic();}
+
+// ==================== 游戏核心 ====================
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+const W=480,H=800;canvas.width=W;canvas.height=H;
+let gameState='menu',gameMode='run',currentLevel=0;
+let lives=3,totalCoins=0,totalStars=0,totalQuiz=0;
+let levelCoins=0,levelStars=0,levelQuiz=0;
+let unlockedLevels=1;
+try{unlockedLevels=Math.max(1,parseInt(localStorage.getItem('fzbx_unlocked')||'1'));}catch(e){}
+const player={x:60,y:500,w:30,h:38,vx:0,vy:0,speed:4.3,jumpPower:12.5,onGround:false,jumps:0,maxJumps:2,facing:1,invincible:0,animFrame:0};
+const keys={left:false,right:false,jump:false};
+let jumpPressed=false;
+
+const knowledgeBase=['凡是要求转账的，一定要通过电话或当面核实！','公检法机关不会电话办案，也没有"安全账户"！','正规中奖不会要求先交手续费、税费！','保健品不是药品，不能治疗疾病！','"高收益、稳赚不赔"的投资都是诈骗！','陌生链接不要点，陌生二维码不要扫！','验证码就是钱，任何人索要验证码都是骗子！','冒充领导要求转账，一定要电话核实！','以房养老只有银保监会批准的保险公司能做！','遇到诈骗第一时间拨打96110报警！','免费体检+送鸡蛋+推销保健品=诈骗套路！','"猜猜我是谁"的电话，直接挂断！','刷单返利都是诈骗，先小额后大额收割！','网络交友诱导投资就是"杀猪盘"！','冒充客服说商品有问题要退款，先去官方核实！','凡是说"不转账就抓你"的都是骗子！'];
+
+const quizBank=[
+  // 第1关：社区入门（电话诈骗）12题
+  [{q:'接到电话说"是我啊，猜猜我是谁"，然后说在外地出事要借5000元，你应该？',opts:['顺着猜名字然后借钱','直接挂断，不主动报名，让对方自报身份','猜不出来就挂了','声音像朋友就借给他'],answer:1,explain:'"猜猜我是谁"诈骗！骗子故意不报名，让你自己猜身份，然后冒充你猜的人借钱。正确做法是不主动报名，直接挂断或让对方自报姓名。'},{q:'对方说"你儿子在学校出车祸了，急需2万手术费，转到这个账户"，你应该？',opts:['赶紧转钱救人','先挂电话，打儿子本人电话或班主任核实','按对方给的账户转','告诉对方银行卡密码'],answer:1,explain:'凡是家人出事急需钱的，一定要通过另一个渠道联系本人或学校核实！骗子利用你着急的心理让你来不及思考。'},{q:'接到"领导"电话说"我是张总，现在在陪客户，给我转5万应急，明天还你"，应该？',opts:['领导安排就转','挂断，打领导本人号码核实，不在原电话转账','问领导卡号就转','让同事帮忙转'],answer:1,explain:'冒充领导诈骗很常见！骗子会准确说出你的姓名和单位。一定要挂断后打领导本人号码核实，绝不在原电话里转账。'},{q:'电话里说"你的医保卡涉嫌违规骗保，要冻结了，配合调查"，应该？',opts:['按对方说的操作','挂断，打12333或去医保局核实','告诉对方身份证号','转钱解冻'],answer:1,explain:'社保/医保部门不会电话通知冻结，更不会要求转账或提供密码。有疑问打官方电话12333或去柜台核实。'},{q:'对方说"我是公安局的，你涉嫌洗钱案，要冻结你所有账户"，应该？',opts:['害怕就配合','挂断打110核实，公检法不电话办案','把存款转安全账户','告诉对方密码'],answer:1,explain:'公检法绝不会电话办案，也没有"安全账户"！遇到直接挂断，有疑问打110或去派出所。'},{q:'电话说"你女儿被绑架了，听到哭声，快交50万赎金不许报警"，应该？',opts:['赶紧交赎金','挂断，打女儿电话或学校核实，同时报警','按对方说的做','在电话里谈判'],answer:1,explain:'虚构绑架诈骗！骗子用提前录好的哭声制造恐慌。一定要挂断后联系女儿本人或学校核实，并立即报警。'},{q:'接到"税务局"电话说"你有一笔3000元退税，提供银行卡号帮你办理"，应该？',opts:['提供卡号等退税','挂断，退税要通过个税APP或税务局官网办理','告诉对方验证码','按提示操作'],answer:1,explain:'退税不会通过电话索要银行卡号和验证码。正规退税通过个人所得税APP或税务局官网办理。索要验证码的都是骗子！'},{q:'电话说"你家老人有残疾人补贴2000元未领，提供卡号马上到账"，应该？',opts:['提供卡号领补贴','挂断，去社区或民政部门核实','按对方说的操作','告诉对方身份证'],answer:1,explain:'补贴发放通过正规渠道，不会电话索要银行卡号。有疑问去社区居委会或民政部门核实。'},{q:'多年不联系的"老同学"用新号码打电话说"我换号了，最近手头紧借3000"，应该？',opts:['老同学就借','通过微信视频或其他方式核实身份后再决定','直接转账','问都不问就借'],answer:1,explain:'冒充熟人诈骗！新号码+借钱=高度可疑。一定要通过微信视频、共同好友等其他方式核实身份。'},{q:'收到电话说"你订的航班因机械故障取消，点击链接办理退票赔300"，应该？',opts:['点链接办理退票','挂断，打航空公司官方客服或APP核实','按提示输银行卡','告诉对方验证码'],answer:1,explain:'机票退改签诈骗！要通过航空公司官方APP或客服电话核实。点陌生链接输银行卡可能被盗刷。'},{q:'电话说"你买的快递在运输中丢失，我们双倍赔偿，加QQ发链接"，应该？',opts:['加QQ点链接','挂断，去购物平台或快递官网核实','按对方说的操作','告诉对方银行卡'],answer:1,explain:'快递理赔诈骗！正规理赔通过购物平台原路退回，不会加QQ发链接。点链接可能中木马盗刷银行卡。'},{q:'电话说"你的社保账户在异地被报销1万元，涉嫌违规，按1转接人工核查"，应该？',opts:['按1转接核查','挂断，社保问题打12333核实','按对方说的操作','告诉对方身份证'],answer:1,explain:'社保异常诈骗！转接的"人工"是骗子同伙。社保问题打官方电话12333，不要按电话提示操作。'}],
+  // 第2关：短信沼泽（短信/网络诈骗）12题
+  [{q:'收到短信"恭喜您中奖10万元，点击链接交2000元手续费即可领取"，应该？',opts:['点链接交手续费','是诈骗，正规中奖不会先交钱','先点进去看看','转发给朋友'],answer:1,explain:'天上不会掉馅饼！所有要求"先交手续费/税费"才能领奖的，100%是诈骗。正规中奖从奖金里代扣。'},{q:'收到"快递丢失，点击链接领300元理赔金"短信，应该？',opts:['点链接输银行卡号','不点击，联系快递公司官方核实','按短信提示操作','把链接发家人'],answer:1,explain:'快递理赔诈骗很常见！点链接后可能是钓鱼网站，盗取银行卡信息。一定要通过快递公司官方APP核实。'},{q:'收到"您的ETC已过期，点此链接更新否则影响通行"短信，应该？',opts:['点链接更新','不点击，去ETC官方APP或网点办理','按提示输银行卡','转发给车主朋友'],answer:1,explain:'ETC业务要通过官方APP或网点办理。陌生链接可能是钓鱼网站，盗取银行卡和身份证信息。'},{q:'收到"【学校通知】孩子期中考试成绩单，点链接查看"短信，应该？',opts:['点链接看成绩','不点击，联系班主任或学校官方平台核实','按提示下载APP','转发给家长群'],answer:1,explain:'学校通知一般通过家长群或官方平台发布。点陌生链接可能中木马病毒，盗取手机内的支付信息。'},{q:'收到"您的银行卡积分可兑换500元现金，点链接领取"，应该？',opts:['点链接兑换','不点击，打银行官方客服或APP核实','按提示输卡号密码','转发给家人'],answer:1,explain:'银行积分兑换要通过官方APP。点陌生链接输入卡号密码，银行卡里的钱可能被转走！'},{q:'收到"【银行通知】您的网银即将失效，点链接升级否则冻结"，应该？',opts:['点链接升级','不点击，打银行官方客服核实','按提示输密码','告诉对方验证码'],answer:1,explain:'钓鱼网站诈骗！链接看起来像银行官网，实际是假的。输入账号密码后钱会被转走。永远从官方APP进入。'},{q:'收到"兼职刷单，日赚300-500，加微信派单，首单立返"短信，应该？',opts:['加微信试试','刷单是诈骗也是违法，不参与','先刷小额试试','叫朋友一起刷'],answer:1,explain:'刷单本身违法！所有刷单返利都是诈骗，先让你小额赚佣金取得信任，再大额刷单后不返钱。'},{q:'收到"点赞关注抖音号，一单5元，日结，加群接单"短信，应该？',opts:['加群试试','点赞返现是诈骗引流，不参与','先做几单试试','叫朋友一起做'],answer:1,explain:'点赞关注返现是诈骗引流手段！先给小额甜头，然后诱导你做"刷单""投注"等大额任务，最终卷款。'},{q:'看到朋友圈"全新iPhone只要2000元，走私货，微信转账发货"，应该？',opts:['便宜赶紧买','不买，远低于市场价的都是诈骗','先转定金','叫朋友一起买'],answer:1,explain:'虚假购物诈骗！远低于市场价的商品都是陷阱。收了钱不发货或发假货，微信转账后无法追回。'},{q:'游戏里有人说"低价出售稀有账号，先付一半定金"，应该？',opts:['付定金交易','不私下交易，走官方平台或不买','先付一半试试','叫朋友担保'],answer:1,explain:'游戏账号交易诈骗！私下交易无保障，付了钱对方可能找回账号或直接消失。要走官方交易平台。'},{q:'相亲网站认识的"对象"聊了一周说"有个投资平台漏洞，带你赚钱"，应该？',opts:['相信对象跟着投','这是"杀猪盘"诈骗，不投不转钱','先投小额试试','把积蓄都给他'],answer:1,explain:'这就是"杀猪盘"！先谈恋爱取得信任，再诱导投资，最后卷款消失。网上交友涉及钱的都是诈骗。'},{q:'收到"您的视频会员即将到期，点链接续费享5折"短信，应该？',opts:['点链接续费','不点击，从视频APP内续费','按提示输银行卡','转发给朋友'],answer:1,explain:'虚假续费诈骗！要从视频APP官方渠道续费。点陌生链接输银行卡可能被盗刷。'}],
+  // 第3关：电话峡谷（冒充公检法）12题
+  [{q:'接到"公安局"电话说你涉嫌洗钱，要把存款转到"安全账户"核查，应该？',opts:['按要求转账自证清白','挂断打110或去派出所核实','把存款都转过去','告诉对方密码'],answer:1,explain:'公检法绝不会电话办案，更没有"安全账户"！遇到这种电话直接挂断，有疑问打110。'},{q:'对方说"这件事是国家机密，不许告诉家人，否则连累全家"，还恐吓你，应该？',opts:['害怕就按对方说的做','这是诈骗特征，立刻挂断并告诉家人','不告诉家人也不转','在电话里讲道理'],answer:1,explain:'真正的执法机关不会禁止你告诉家人，也不会电话恐吓。越恐吓越可疑！挂断后告诉家人或打110。'},{q:'对方发来一张"通缉令"图片，上面有你的名字、照片和身份证号，应该？',opts:['相信了赶紧配合','是PS伪造的，挂断打110核实','按要求转账','告诉对方所有信息'],answer:1,explain:'通缉令是PS伪造的！骗子从黑市买到你的个人信息。真正的通缉不会电话通知，更不会发给本人。直接挂断打110。'},{q:'对方说"帮你转接某某检察官，检察官要跟你说话"，然后另一个人接电话，应该？',opts:['按检察官说的做','都是骗子，公检法不电话办案不转账','转一部分试试','问检察官工号'],answer:1,explain:'所谓"转接检察官/警官"是骗子同伙在演戏。公检法不会电话要求转账，直接挂断。'},{q:'对方说"不配合调查就派警察上门抓你，现在给你半小时考虑"，应该？',opts:['害怕就转账','这是恐吓诈骗，立刻挂断并告诉家人','按要求操作','在电话里求饶'],answer:1,explain:'骗子用恐吓手段让你失去判断力。真正要抓人不会提前打电话通知还给你"考虑时间"。挂断后告诉家人或打110。'},{q:'对方发来"警官证"照片，上面有警号和照片，说"我是真警察"，应该？',opts:['相信警官证','警官证可PS，挂断打110核实','按要求转账','告诉对方信息'],answer:1,explain:'警官证可以PS伪造！真警察不会电话办案要求转账。有疑问打110或去派出所核实。'},{q:'对方说"要核查你的资金来源，把所有存款转到指定账户，核查完退回"，应该？',opts:['配合核查转账','这是诈骗，公检法不要求转账核查','转一部分试试','告诉对方密码'],answer:1,explain:'公检法没有"资金核查转账"的程序！这就是骗你转钱。任何要求转账的"核查"都是诈骗。'},{q:'对方说"你涉嫌犯罪，要交5万取保候审保证金，交了就不抓你"，应该？',opts:['交保证金','取保候审由法院决定，不会电话收钱，这是诈骗','先交一部分','借钱交'],answer:1,explain:'取保候审是司法程序，由法院/检察院决定，保证金交到指定账户，绝不会电话索要。这是诈骗！'},{q:'对方说"我可以帮你请最好的律师，律师费3万，先打过来"，应该？',opts:['打钱请律师','自己找正规律师事务所，不通过电话请','先付一部分','叫朋友推荐'],answer:1,explain:'冒充律师诈骗！请律师要去正规律师事务所签合同。电话里要求转账的"律师"都是骗子。'},{q:'收到"法院传票"短信说"你被起诉了，点链接查看详情，不回应将强制执行"，应该？',opts:['点链接查看','法院传票通过纸质送达，不发短信链接，打12368核实','按提示操作','告诉对方信息'],answer:1,explain:'法院传票通过纸质邮寄或电子送达平台送达，不会发短信链接。打12368全国法院服务热线核实。'},{q:'对方说"签了这个保密协议就不能告诉任何人，包括家人律师"，应该？',opts:['签保密协议','这是诈骗套路，真正的法律程序不禁止告知家人','按要求签','在电话里同意'],answer:1,explain:'骗子用"保密协议"孤立你，让你无法向家人求助。真正的执法不会禁止你告诉家人和律师。'},{q:'对方让你下载一个"警务通"或"安全防护"APP，说用来办案，应该？',opts:['下载APP配合','这是诈骗，假APP可能盗取手机信息，不下载','按要求下载','告诉对方验证码'],answer:1,explain:'假警察APP诈骗！下载的APP可能是木马，盗取你手机里的所有信息和验证码。公检法不会让你下载这类APP。'}],
+  // 第4关：理财深渊（投资理财诈骗）12题
+  [{q:'群里"老师"说"有内部消息，投10万月赚3万，名额有限"，应该？',opts:['跟着老师投','这是诈骗，不相信不参与','先投1万试试','把积蓄都投进去'],answer:1,explain:'"内部消息""稳赚不赔""高收益"全是诈骗！盈利截图是伪造的，群里的"投资者"都是托（水军）。'},{q:'投了1万赚了2000，对方说"加大投入到20万，这次赚更多"，应该？',opts:['能赚就多投','这是"先给甜头再收割"套路，立即停止提现','再投5万试试','借钱加大投入'],answer:1,explain:'典型虚假投资平台诈骗！先让你小额盈利取得信任，等你投大钱就卷款跑路，平台也打不开。'},{q:'网上认识的"男友"说"发现平台漏洞，充1万赚5千，我帮你操作"，应该？',opts:['相信男友跟着投','这是"杀猪盘"，不投不转钱','先投小额试试','把积蓄都给他'],answer:1,explain:'"杀猪盘"诈骗！先谈恋爱取得信任，再诱导投资，最后卷款消失。网上交友涉及钱的全是诈骗。'},{q:'平台说"要交20%保证金才能提现，交了一起到账"，应该？',opts:['交保证金提现','这是诈骗，正规平台不会收保证金','交一部分试试','借钱交保证金'],answer:1,explain:'正规投资平台不会要求交保证金才能提现。这是骗子在收割最后一波，交了也提不出来，只会越陷越深。'},{q:'有人推荐"数字货币交易平台，一天翻倍，国内不能做所以用境外平台"，应该？',opts:['赶紧开户入金','不参与，国内不允许数字货币交易，平台都是诈骗','小额试试','拉朋友一起投'],answer:1,explain:'国内不允许数字货币交易平台运营。所谓"境外平台""一天翻倍"都是诈骗，入金后无法提现。'},{q:'有人说"公司准备上市，现在买原始股，上市后翻10倍"，应该？',opts:['赶紧买原始股','原始股不会向社会公众发售，这是诈骗','先买一点试试','叫朋友一起买'],answer:1,explain:'原始股诈骗！真正的原始股只面向特定对象，不会随便向普通人推销。"上市翻10倍"是画饼。'},{q:'有人推荐"外汇平台，有专业老师带单，月收益30%"，应该？',opts:['跟着老师做','国内不允许网络外汇交易，都是诈骗平台','先小额试试','加大投入'],answer:1,explain:'国内不允许网络外汇保证金交易。所谓"老师带单""月收益30%"都是诈骗，平台数据可以造假。'},{q:'有人说"P2P理财，年息25%，保本保息，上市公司背景"，应该？',opts:['高息赶紧投','P2P已清零，高息保本都是诈骗，不参与','先投试试','分散多投几个'],answer:1,explain:'P2P网贷已全部清零。"保本保息高收益"违反金融规律，都是诈骗或非法集资。'},{q:'直播间"股神"说"跟着我炒股，包赚不赔，交3888会员费进VIP群"，应该？',opts:['交会员费跟着炒','荐股诈骗，没有包赚不赔的事，不交费不参与','先交试试','叫朋友一起'],answer:1,explain:'荐股诈骗！"股神"先推荐股票涨了就吹，跌了就拉黑。交会员费后推荐的股票可能亏更多，甚至让你接盘。'},{q:'有人说"众筹开奶茶店，1万起投，年回报40%，还送免费喝"，应该？',opts:['赶紧投资','众筹高回报是诈骗，不参与','先投1万试试','叫朋友一起投'],answer:1,explain:'众筹诈骗！用"高回报+实物福利"吸引投资，钱收够了就跑路。正规投资不会承诺固定高回报。'},{q:'有人说"买矿机挖比特币，托管在我们机房，每天产币到账"，应该？',opts:['买矿机托管','云挖矿/托管挖矿大多是诈骗，不参与','先买一台试试','多买几台'],answer:1,explain:'云挖矿诈骗！你买的"矿机"根本不存在，前期给你看的"收益"是后来人的钱。随时跑路。'},{q:'有人说"消费返利，在我们平台消费1万，半年返1.5万"，应该？',opts:['消费还能赚钱，赶紧','消费返利是庞氏骗局，不参与','先小额试试','多消费多返'],answer:1,explain:'消费返利诈骗！用后来人的钱返给前面的人，本质是庞氏骗局。资金链一断就跑路，血本无归。'}],
+  // 第5关：诈骗城堡（综合Boss关）15题
+  [{q:'以下哪个行为是安全的？',opts:['跟着群里老师炒数字货币','在银行APP买正规理财产品','点链接下载高收益APP','把钱转给"操盘手"代炒'],answer:1,explain:'只有通过银行、证券公司等正规金融机构购买的理财产品才是安全的。任何"老师带单""代客理财"都可能是诈骗！'},{q:'关于保健品，正确的说法是？',opts:['保健品可以代替药品治病','保健品有调节功能但不能治病，购买前咨询医生','越贵效果越好','名人代言一定有效'],answer:1,explain:'保健品只有调节机体功能的作用，不能治疗疾病！价格高低和效果没有必然关系，名人代言也不代表有效。'},{q:'遇到养老相关的大额推销，最稳妥的是？',opts:['销售说得好就买','先和子女商量，核实资质，不轻易交钱','趁优惠赶紧买','多买几份更划算'],answer:1,explain:'老年人遇到养老、理财等大额消费时，一定要先和子女商量，核实机构资质。凡是催你赶紧交钱的都要多留心眼！'},{q:'遇到诈骗已经转了钱，第一件事是？',opts:['不好意思说，默默承受','立刻打110报警，越早越可能追回','再转一点试试要回来','把骗子删掉当没发生'],answer:1,explain:'遇到诈骗不要慌，第一时间停止转账并打110报警！越早报警越有可能冻结对方账户追回损失。千万不要隐瞒！'},{q:'收到"亲友"视频电话说"出车祸了急需5万"，但视频里画面卡顿、对方不接你话题，应该？',opts:['赶紧转钱','可能是AI换脸诈骗，挂断后打本人电话核实','按对方说的做','问对方密码'],answer:1,explain:'AI换脸诈骗！骗子用AI合成亲友的脸和声音。画面卡顿、不接话题是特征。一定要挂断后打本人电话核实。'},{q:'"客服"说"你买的东西有质量问题，要双倍赔偿，加QQ发退款链接"，应该？',opts:['加QQ点链接','挂断，去购物平台官方客服核实','告诉对方银行卡','点链接退款'],answer:1,explain:'冒充客服退款诈骗！正规退款通过购物平台原路退回。加QQ发链接是钓鱼，可能盗刷银行卡。'},{q:'有人说"刷单赚佣金，一单返20元，多劳多得"，应该？',opts:['试试刷单赚钱','刷单是诈骗也是违法，不参与','先刷小额试试','叫朋友一起刷'],answer:1,explain:'刷单本身就是违法的！所有刷单返利都是诈骗，先小额后大额收割，最后不返钱。'},{q:'"学长"说"校园贷零利息，凭学生证就能借，还能帮你包装身份"，应该？',opts:['零利息赶紧借','校园贷是陷阱，不参与，需要钱找家长','先借一点试试','叫同学一起借'],answer:1,explain:'校园贷诈骗！"零利息"是诱饵，实际利息高得吓人，还会暴力催收。学生需要钱应该找家长或正规渠道。'},{q:'培训机构说"先就业后付款，工作了再还学费，签协议"，应该？',opts:['签协议报名','培训贷陷阱，不签，核实机构资质','先学再说','叫同学一起报'],answer:1,explain:'培训贷诈骗！"先就业后付款"实际是让你贷款交学费。机构可能跑路，你还得还贷款。报名前核实机构资质。'},{q:'收到"航班取消，点链接办理退票赔300元"短信，应该？',opts:['点链接退票','不点击，打航空公司官方客服核实','按提示输银行卡','告诉对方验证码'],answer:1,explain:'机票退改签诈骗！要通过航空公司官方APP或客服电话核实。点陌生链接输银行卡可能被盗刷。'},{q:'接到"税务局"电话说"有一笔退税，提供银行卡号帮你办理"，应该？',opts:['提供卡号等退税','挂断，退税通过个税APP或税务局官网办理','告诉对方验证码','按提示操作'],answer:1,explain:'退税诈骗！退税通过个人所得税APP或税务局官网办理。电话索要卡号和验证码的都是骗子。'},{q:'收到"某慈善基金会，捐款100元返200元，做善事还赚钱"，应该？',opts:['捐款还能赚钱，赶紧','慈善捐款不会返利，这是诈骗，不参与','先捐100试试','叫朋友一起捐'],answer:1,explain:'慈善返利诈骗！用"做善事+返利"吸引人，本质是庞氏骗局。捐款不会返钱，更不会"赚钱"。'},{q:'有人说"民族资产解冻，交500元入会费，解冻后分50万"，应该？',opts:['交入会费等分钱','民族资产解冻是典型诈骗，不参与','先交试试','叫亲戚一起交'],answer:1,explain:'"民族资产解冻"是老牌诈骗！所谓"解冻民族资产"完全不存在。交了入会费就石沉大海，还可能发展下线变传销。'},{q:'对方让你下载"国家反诈中心"APP，但链接是他发的，应该？',opts:['点链接下载','不从陌生链接下载，去手机应用商店搜索下载','按提示下载','告诉对方验证码'],answer:1,explain:'假APP诈骗！骗子发的"反诈APP"可能是木马。正规国家反诈中心APP从手机应用商店搜索下载。'},{q:'以下哪种情况，你应该立即挂断并报警？',opts:['对方说"我是客服，帮你退款"','对方说"我是公安局，你涉嫌犯罪，转账核查"','对方说"你有快递到付"','对方说"你订的外卖到了"'],answer:1,explain:'公检法绝不会电话办案要求转账！凡是自称公检法要求转账的，100%是诈骗，立即挂断打110。'}],
+  // 第6关：无诈社区（总结/养老）12题
+  [{q:'接到陌生电话说"你中了大奖，先交个税才能领奖"，应该？',opts:['交了税就能领奖','直接挂断，正规中奖不先收钱','问清楚再交','让对方代扣'],answer:1,explain:'所有要求先交钱才能领奖的都是诈骗！正规中奖会从奖金里代扣个税，不会让你先转钱。'},{q:'有人说"刷单赚佣金，一单返20元"，应该？',opts:['试试刷单赚钱','刷单是诈骗也是违法，不参与','先刷小额试试','叫朋友一起刷'],answer:1,explain:'刷单本身就是违法的！所有刷单返利都是诈骗，先让你小额赚佣金，再大额刷单后不返钱。'},{q:'"客服"说"你买的东西有质量问题，要双倍赔偿"，应该？',opts:['按客服说的操作','挂断，去购物平台官方客服核实','告诉对方银行卡','点链接退款'],answer:1,explain:'冒充客服退款诈骗很常见！要通过购物平台官方客服核实，不要点陌生链接或告诉对方银行卡。'},{q:'以下哪个做法是正确的反诈习惯？',opts:['验证码可以告诉信任的人','不轻易转账，转账前多方核实','陌生链接可以点看看','群里老师推荐的可以信'],answer:1,explain:'反诈核心就是"不轻易转账"！凡是涉及转账的，一定要通过其他渠道多方核实。验证码谁都不能给！'},{q:'发现家人可能正在被诈骗，已经在和骗子通话了，应该？',opts:['不管他','立即制止，挂断电话，帮助核实，必要时报警','让他自己决定','在旁边看热闹'],answer:1,explain:'发现家人被诈骗要立即制止！挂断电话，帮助核实对方身份，必要时拨打96110或110报警。家人之间互相提醒是最好的防护。'},{q:'社区里有人说"免费领鸡蛋，听完健康讲座还送米送油"，应该？',opts:['领了鸡蛋就买产品','这是保健品诈骗套路，不买不掏钱','买一点试试','叫邻居一起去'],answer:1,explain:'典型保健品诈骗套路！先用小礼品吸引老年人，再洗脑推销高价无效保健品。记住：天下没有免费的午餐。'},{q:'有人上门说"免费体检，然后推荐一款能治糖尿病的治疗仪"，应该？',opts:['免费体检赶紧做','免费体检+推销产品=诈骗，不买不掏钱','先体验再说','叫邻居一起'],answer:1,explain:'免费体检诈骗！"治疗仪"不能治病，价格虚高。有健康问题去正规医院，不要相信上门推销。'},{q:'有人说"养老公寓投资，10万起投，每年返2万，还能免费住"，应该？',opts:['高回报赶紧投','养老投资诈骗，不参与，核实资质','先投10万试试','叫朋友一起投'],answer:1,explain:'养老投资诈骗！用"高回报+免费住"吸引老年人投资，钱收够了就跑路。投资养老项目要核实资质，谨慎再谨慎。'},{q:'接到"儿子"电话说"妈，我出事了，快转2万"，但声音不太像，应该？',opts:['赶紧转钱','挂断，打儿子本人电话或视频核实','按对方说的做','问对方密码'],answer:1,explain:'AI语音/虚构绑架诈骗！声音可能是AI合成的。一定要挂断后打儿子本人电话或视频核实，不要在原电话里转账。'},{q:'以下哪种做法能有效保护个人信息？',opts:['快递单直接扔','快递单涂掉姓名电话地址再扔','身份证随便给人拍','密码用生日好记'],answer:1,explain:'保护个人信息很重要！快递单上的姓名、电话、地址可能被骗子利用。扔掉前一定要涂掉或撕毁。密码不要用生日。'},{q:'接到96110来电，说"你可能正在被诈骗，请立即停止转账"，应该？',opts:['挂断不信','这是反诈预警专线，立即停止转账并接听','继续转账','告诉对方密码'],answer:1,explain:'96110是全国反诈预警专线！接到这个电话说明你可能正在被诈骗，一定要立即停止转账并接听。'},{q:'关于国家反诈中心APP，正确的是？',opts:['没用，不用装','从应用商店下载安装，开启来电预警，能识别诈骗电话','从短信链接下载','装了就不会被骗'],answer:1,explain:'国家反诈中心APP能识别诈骗电话和短信，开启来电预警很有用！但要从手机应用商店下载，不是万能的，仍需提高警惕。'}]
+];
+
+const levels=[
+  {name:'社区入门',desc:'电话诈骗基础',bg:['#87CEEB','#E0F6FF'],groundColor:'#7EC850',cardColor:'#4facfe',platforms:[{x:0,y:700,w:480,h:100},{x:100,y:600,w:90,h:18},{x:250,y:540,w:90,h:18},{x:380,y:480,w:90,h:18},{x:200,y:400,w:90,h:18},{x:60,y:340,w:90,h:18},{x:220,y:270,w:90,h:18},{x:370,y:200,w:100,h:18}],spikes:[{x:180,y:680,w:40,h:20}],coins:[{x:130,y:560},{x:280,y:500},{x:410,y:440},{x:230,y:360},{x:90,y:300},{x:250,y:230},{x:400,y:160},{x:50,y:650}],stars:[{x:410,y:150}],quizBoxes:[{x:130,y:565,w:28,h:28,quizIdx:0},{x:280,y:505,w:28,h:28,quizIdx:1},{x:230,y:365,w:28,h:28,quizIdx:2},{x:90,y:305,w:28,h:28,quizIdx:3},{x:250,y:235,w:28,h:28,quizIdx:4}],enemies:[],goal:{x:400,y:140,w:40,h:60},playerStart:{x:40,y:640},hint:'每段路都有 📦 问答宝箱！'},
+  {name:'短信沼泽',desc:'短信诈骗识别',bg:['#FFB6C1','#FFE4E1'],groundColor:'#D4A574',cardColor:'#fa709a',platforms:[{x:0,y:700,w:160,h:100},{x:220,y:700,w:260,h:100},{x:60,y:590,w:80,h:18},{x:190,y:530,w:80,h:18},{x:330,y:470,w:80,h:18},{x:180,y:390,w:80,h:18},{x:320,y:320,w:80,h:18},{x:60,y:280,w:80,h:18},{x:200,y:210,w:80,h:18},{x:350,y:160,w:100,h:18}],spikes:[{x:160,y:680,w:60,h:20}],coins:[{x:90,y:550},{x:220,y:490},{x:360,y:430},{x:210,y:350},{x:350,y:280},{x:90,y:240},{x:230,y:170},{x:380,y:120}],stars:[{x:380,y:110},{x:90,y:230}],quizBoxes:[{x:90,y:555,w:28,h:28,quizIdx:0},{x:220,y:495,w:28,h:28,quizIdx:1},{x:210,y:355,w:28,h:28,quizIdx:2},{x:350,y:285,w:28,h:28,quizIdx:3},{x:230,y:175,w:28,h:28,quizIdx:4}],enemies:[{x:250,y:670,w:28,h:28,vx:1.5,range:[220,470],type:'sms'}],goal:{x:380,y:100,w:40,h:60},playerStart:{x:40,y:640},hint:'小心地刺！每个平台都有题！'},
+  {name:'电话峡谷',desc:'冒充公检法',bg:['#DDA0DD','#E6E6FA'],groundColor:'#9370DB',cardColor:'#667eea',platforms:[{x:0,y:700,w:100,h:100},{x:160,y:640,w:60,h:18},{x:280,y:590,w:60,h:18},{x:390,y:540,w:80,h:18},{x:260,y:460,w:80,h:18},{x:100,y:400,w:80,h:18},{x:260,y:330,w:80,h:18},{x:390,y:260,w:80,h:18},{x:50,y:280,w:70,h:18},{x:180,y:200,w:80,h:18}],spikes:[{x:100,y:680,w:60,h:20}],coins:[{x:180,y:600},{x:300,y:550},{x:420,y:500},{x:290,y:420},{x:130,y:360},{x:290,y:290},{x:420,y:220},{x:80,y:240},{x:210,y:160}],stars:[{x:420,y:210},{x:80,y:230}],quizBoxes:[{x:180,y:605,w:28,h:28,quizIdx:0},{x:300,y:555,w:28,h:28,quizIdx:1},{x:290,y:425,w:28,h:28,quizIdx:2},{x:130,y:365,w:28,h:28,quizIdx:3},{x:420,y:225,w:28,h:28,quizIdx:4}],enemies:[{x:280,y:560,w:28,h:28,vx:2,range:[260,340],type:'phone'},{x:130,y:370,w:28,h:28,vx:1.8,range:[100,180],type:'phone'}],goal:{x:210,y:140,w:40,h:60},playerStart:{x:30,y:640},hint:'电话炸弹来回移动！每段都有题！'},
+  {name:'理财深渊',desc:'理财投资诈骗',bg:['#FF8C00','#FFD700'],groundColor:'#CD853F',cardColor:'#f39c12',platforms:[{x:0,y:700,w:90,h:100},{x:150,y:670,w:50,h:18},{x:260,y:610,w:50,h:18},{x:370,y:550,w:90,h:18},{x:240,y:470,w:60,h:18},{x:100,y:410,w:60,h:18},{x:240,y:340,w:60,h:18},{x:370,y:270,w:90,h:18},{x:40,y:300,w:60,h:18},{x:170,y:220,w:60,h:18}],spikes:[{x:90,y:680,w:60,h:20},{x:200,y:680,w:60,h:20},{x:310,y:680,w:60,h:20}],coins:[{x:170,y:630},{x:280,y:570},{x:400,y:510},{x:265,y:430},{x:125,y:370},{x:265,y:300},{x:400,y:230},{x:65,y:260},{x:195,y:180}],stars:[{x:400,y:220},{x:65,y:250}],quizBoxes:[{x:170,y:635,w:28,h:28,quizIdx:0},{x:280,y:575,w:28,h:28,quizIdx:1},{x:265,y:435,w:28,h:28,quizIdx:2},{x:125,y:375,w:28,h:28,quizIdx:3},{x:400,y:235,w:28,h:28,quizIdx:4}],enemies:[{x:390,y:520,w:28,h:28,vx:2.5,range:[370,460],type:'coin'},{x:390,y:240,w:28,h:28,vx:2,range:[370,460],type:'coin'}],goal:{x:195,y:160,w:40,h:60},playerStart:{x:30,y:640},hint:'高风险！每段路都有答题宝箱！'},
+  {name:'诈骗城堡',desc:'综合Boss关',bg:['#8B0000','#DC143C'],groundColor:'#800000',cardColor:'#e74c3c',platforms:[{x:0,y:700,w:480,h:100},{x:60,y:600,w:80,h:18},{x:200,y:550,w:80,h:18},{x:340,y:500,w:80,h:18},{x:200,y:420,w:80,h:18},{x:50,y:360,w:80,h:18},{x:190,y:300,w:80,h:18},{x:330,y:240,w:80,h:18},{x:100,y:200,w:80,h:18},{x:260,y:140,w:100,h:18}],spikes:[{x:140,y:680,w:60,h:20},{x:280,y:680,w:60,h:20}],coins:[{x:90,y:560},{x:230,y:510},{x:370,y:460},{x:230,y:380},{x:80,y:320},{x:220,y:260},{x:360,y:200},{x:130,y:160},{x:290,y:100}],stars:[{x:290,y:90},{x:80,y:310},{x:370,y:450}],quizBoxes:[{x:90,y:565,w:28,h:28,quizIdx:0},{x:230,y:515,w:28,h:28,quizIdx:1},{x:230,y:385,w:28,h:28,quizIdx:2},{x:80,y:325,w:28,h:28,quizIdx:3},{x:360,y:205,w:28,h:28,quizIdx:4},{x:130,y:165,w:28,h:28,quizIdx:5}],enemies:[{x:80,y:664,w:34,h:34,vx:2,range:[0,480],type:'boss'},{x:220,y:520,w:28,h:28,vx:2,range:[200,280],type:'phone'},{x:70,y:330,w:28,h:28,vx:1.5,range:[50,130],type:'sms'}],goal:{x:290,y:80,w:40,h:60},playerStart:{x:40,y:640},hint:'Boss关！6道题等你挑战！'},
+  {name:'无诈社区',desc:'反诈总结',bg:['#00CED1','#7FFFD4'],groundColor:'#3CB371',cardColor:'#27ae60',platforms:[{x:0,y:700,w:480,h:100},{x:80,y:600,w:90,h:18},{x:230,y:530,w:90,h:18},{x:370,y:460,w:90,h:18},{x:220,y:380,w:90,h:18},{x:70,y:310,w:90,h:18},{x:220,y:240,w:90,h:18},{x:360,y:170,w:100,h:18}],spikes:[],coins:[{x:110,y:560},{x:260,y:490},{x:400,y:420},{x:250,y:340},{x:100,y:270},{x:250,y:200},{x:390,y:130},{x:50,y:650},{x:430,y:650}],stars:[{x:390,y:120}],quizBoxes:[{x:110,y:565,w:28,h:28,quizIdx:0},{x:260,y:495,w:28,h:28,quizIdx:1},{x:250,y:345,w:28,h:28,quizIdx:2},{x:100,y:275,w:28,h:28,quizIdx:3},{x:250,y:205,w:28,h:28,quizIdx:4}],enemies:[],goal:{x:390,y:110,w:40,h:60},playerStart:{x:40,y:640},hint:'最后一关！你就是反诈守护者！'}
+];
+
+let curLevel=null,levelCoinsCollected=[],levelStarsCollected=[],quizBoxesOpened=[],particles=[],currentQuiz=null;
+
+// ===== 答题界面状态（纯答题+限时挑战共用） =====
+let qsMode='quiz',qsLevel=0,qsQidx=0,qsScore=0,qsLives=3,qsCorrect=0,qsCombo=0,qsMaxCombo=0,qsAnswered=false,qsTimer=0,qsTimeLeft=60,qsTimerInterval=null;
+
+function selectMode(mode){
+  sfxClick();initAudio();if(soundOn)startMusic();
+  gameMode=mode;
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('levelSelect').style.display='block';
+  const bg=document.getElementById('levelBg');
+  if(mode==='run'){bg.style.background='linear-gradient(180deg,#1a1a3e 0%,#2d1b69 50%,#4a1b69 100%)';document.getElementById('levelSelectTitle').textContent='🏃 跑酷冒险地图';document.getElementById('levelSelectSub').textContent='选择关卡，开始跑酷答题之旅';document.getElementById('modeBadge').textContent='🏃 跑酷答题模式';document.getElementById('modeBadge').style.background='linear-gradient(135deg,#ff6b6b,#feca57)';}
+  else{bg.style.background='linear-gradient(180deg,#2d1b69 0%,#6b1b69 50%,#8b2a5a 100%)';document.getElementById('levelSelectTitle').textContent='📝 答题挑战地图';document.getElementById('levelSelectSub').textContent='选择关卡，专注反诈知识答题';document.getElementById('modeBadge').textContent='📝 纯答题模式';document.getElementById('modeBadge').style.background='linear-gradient(135deg,#a855f7,#ec4899)';}
+  document.getElementById('statCoins').textContent=totalCoins;document.getElementById('statStars').textContent=totalStars;document.getElementById('statQuiz').textContent=totalQuiz;
+  renderLevelGrid();
+}
+function renderLevelGrid(){
+  const grid=document.getElementById('levelGrid');
+  grid.innerHTML=levels.map((lv,i)=>{const locked=i>=unlockedLevels;return '<div class="level-card '+(locked?'locked':'')+'" style="background:linear-gradient(135deg,'+lv.cardColor+','+lv.cardColor+'cc);" '+(locked?'':'onclick="startLevel('+i+')"')+'><div class="lc-quiz">📝'+lv.quizBoxes.length+'题</div><div class="lc-num">'+(locked?'🔒':(i+1))+'</div><div class="lc-name">'+lv.name+'</div><div class="lc-desc">'+lv.desc+'</div><div class="lc-stars">'+(locked?'':'⭐'.repeat(lv.stars.length))+'</div></div>';}).join('');
+}
+function backToStart(){sfxClick();document.getElementById('levelSelect').style.display='none';document.getElementById('startScreen').style.display='block';}
+
+function startLevel(idx){
+  sfxClick();currentLevel=idx;lives=3;totalCoins=0;totalStars=0;totalQuiz=0;
+  if(gameMode==='run'){loadLevel(idx);gameState='playing';document.getElementById('levelSelect').style.display='none';document.getElementById('hud').style.display='flex';document.getElementById('pauseBtn').style.display='flex';document.getElementById('touchControls').style.display='flex';if(soundOn)startMusic();}
+  else{startQuizScreen('quiz',idx);}
+}
+
+// ===== 纯答题/限时挑战 答题界面 =====
+function startQuizScreen(mode,idx){
+  qsMode=mode;qsLevel=idx;qsQidx=0;qsScore=0;qsLives=3;qsCorrect=0;qsCombo=0;qsMaxCombo=0;qsAnswered=false;
+  document.getElementById('levelSelect').style.display='none';
+  document.getElementById('quizScreen').style.display='flex';
+  const lv=levels[idx];
+  document.getElementById('qsBg').style.background='linear-gradient(180deg,'+lv.bg[0]+','+lv.bg[1]+')';
+  document.getElementById('qsTitle').textContent='第'+(idx+1)+'关 · '+lv.name;
+  document.getElementById('qsLivesBox').style.display='flex';
+  if(soundOn)startMusic();
+  loadQSQuestion();
+}
+function startTimedMode(){
+  sfxClick();initAudio();if(soundOn)startMusic();
+  qsMode='timed';qsLevel=Math.floor(Math.random()*6);qsQidx=0;qsScore=0;qsLives=99;qsCorrect=0;qsCombo=0;qsMaxCombo=0;qsAnswered=false;qsTimeLeft=60;
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('quizScreen').style.display='flex';
+  document.getElementById('qsBg').style.background='linear-gradient(180deg,#1a1a3e,#4a1b69,#8b2a5a)';
+  document.getElementById('qsTitle').textContent='⏱️ 限时挑战 60秒';
+  document.getElementById('qsLivesBox').style.display='none';
+  // 添加计时器显示
+  const stats=document.querySelector('#quizScreen .qs-stats');
+  stats.innerHTML='<div class="qs-stat timer">⏱️<span id="qsTimer">60</span>s</div><div class="qs-stat combo">🔥<span id="qsComboDisp">0</span></div><div class="qs-stat">💰<span id="qsScore">0</span></div>';
+  if(qsTimerInterval)clearInterval(qsTimerInterval);
+  qsTimerInterval=setInterval(()=>{qsTimeLeft--;document.getElementById('qsTimer').textContent=qsTimeLeft;if(qsTimeLeft<=10)playTone(800,0.1,'square',0.1);if(qsTimeLeft<=0){clearInterval(qsTimerInterval);timedEnd();}},1000);
+  loadQSQuestion();
+}
+function loadQSQuestion(){
+  let bank,total;
+  if(qsMode==='timed'){
+    // 随机从所有题库抽
+    const allQs=[];quizBank.forEach((b,bi)=>b.forEach((q,qi)=>allQs.push({q,bi,qi})));
+    currentQuiz=allQs[Math.floor(Math.random()*allQs.length)].q;
+    total='∞';
+  }else{
+    bank=quizBank[qsLevel];currentQuiz=bank[qsQidx];total=bank.length;
+  }
+  qsAnswered=false;
+  const livesEl=document.getElementById('qsLives');if(livesEl)livesEl.textContent=qsLives;
+  document.getElementById('qsScore').textContent=qsScore;
+  if(qsMode!=='timed'){document.getElementById('qsQnum').textContent='第 '+(qsQidx+1)+' / '+total+' 题';document.getElementById('qsProgress').style.width=((qsQidx)/total*100)+'%';}
+  else{document.getElementById('qsQnum').textContent='已答 '+(qsQidx)+' 题 · 连击 '+qsCombo;document.getElementById('qsProgress').style.width=((60-qsTimeLeft)/60*100)+'%';}
+  document.getElementById('qsQicon').textContent=['🤔','💡','🎯','🔍','⚡','📖','🧠','🎨'][qsQidx%8];
+  currentQuiz=shuffleQuestion(currentQuiz);
+  document.getElementById('qsQtext').textContent=currentQuiz.q;
+  const letters=['a','b','c','d'];
+  document.getElementById('qsOptions').innerHTML=currentQuiz.opts.map((opt,i)=>'<div class="qs-opt '+letters[i]+'" onclick="answerQS('+i+')"><span class="opt-letter">'+String.fromCharCode(65+i)+'</span><span>'+opt+'</span></div>').join('');
+  document.getElementById('qsExplain').className='qs-explain';
+  document.getElementById('qsNextBtn').classList.remove('show');
+  sfxQuiz();
+}
+function answerQS(idx){
+  if(qsAnswered)return;qsAnswered=true;
+  const q=currentQuiz;const opts=document.querySelectorAll('.qs-opt');
+  opts.forEach(o=>o.classList.add('disabled'));
+  const exp=document.getElementById('qsExplain');
+  if(idx===q.answer){
+    opts[idx].classList.add('correct');sfxCorrect();
+    qsCombo++;qsMaxCombo=Math.max(qsMaxCombo,qsCombo);qsCorrect++;totalQuiz++;
+    let pts=10;
+    if(qsMode==='timed'){pts=10*Math.min(qsCombo,5);}
+    qsScore+=pts;totalCoins+=pts;
+    exp.className='qs-explain good show';
+    document.getElementById('qsExplainTitle').textContent='✅ 回答正确！+'+pts+'分'+(qsMode==='timed'&&qsCombo>1?' 连击x'+qsCombo:'');
+  }else{
+    opts[idx].classList.add('wrong');opts[q.answer].classList.add('correct');
+    sfxWrong();qsCombo=0;
+    if(qsMode==='timed'){qsTimeLeft=Math.max(0,qsTimeLeft-3);document.getElementById('qsTimer').textContent=qsTimeLeft;}
+    else{qsLives--;}
+    exp.className='qs-explain bad show';
+    document.getElementById('qsExplainTitle').textContent='❌ 回答错误'+(qsMode==='timed'?' -3秒':' -1❤️');
+  }
+  document.getElementById('qsExplainText').textContent=q.explain;
+  const livesEl2=document.getElementById('qsLives');if(livesEl2)livesEl2.textContent=qsLives;
+  document.getElementById('qsScore').textContent=qsScore;
+  if(qsMode==='timed'){document.getElementById('qsComboDisp').textContent=qsCombo;}
+  if(qsMode!=='timed'&&qsLives<=0){setTimeout(()=>quizLose(),1200);return;}
+  document.getElementById('qsNextBtn').classList.add('show');
+  if(qsMode==='timed'){document.getElementById('qsNextBtn').textContent='下一题 →';}
+  else{document.getElementById('qsNextBtn').textContent=(qsQidx>=quizBank[qsLevel].length-1)?'查看结果 🏆':'下一题 →';}
+}
+function quizNext(){
+  sfxClick();qsQidx++;
+  if(qsMode==='timed'){loadQSQuestion();return;}
+  if(qsQidx>=quizBank[qsLevel].length){quizWin();return;}
+  loadQSQuestion();
+}
+function quizWin(){
+  stopMusic();sfxWin();
+  totalCoins+=qsScore;
+  if(qsLevel+1>=unlockedLevels&&qsLevel+1<levels.length){unlockedLevels=qsLevel+2;try{localStorage.setItem('fzbx_unlocked',unlockedLevels);}catch(e){}}
+  document.getElementById('quizScreen').style.display='none';
+  document.getElementById('winCoins').textContent=qsScore;document.getElementById('winStars').textContent='-';document.getElementById('winQuiz').textContent=qsCorrect+'/'+quizBank[qsLevel].length;
+  document.getElementById('winTitle').textContent='🎉 答题通关！';document.getElementById('winMsg').textContent='答对'+qsCorrect+'题，获得'+qsScore+'分！';
+  const knowledge=quizBank[qsLevel].map(q=>q.explain).join(' ');
+  document.getElementById('winKnowledgeText').textContent=knowledge.substring(0,90)+'...';
+  if(qsLevel>=levels.length-1){document.getElementById('winNextBtn').style.display='none';setTimeout(()=>{document.getElementById('winModal').style.display='none';document.getElementById('finalCoins').textContent=totalCoins;document.getElementById('finalStars').textContent=totalStars;document.getElementById('finalQuiz').textContent=totalQuiz;document.getElementById('finalModal').style.display='flex';},2000);}else{document.getElementById('winNextBtn').style.display='inline-block';}
+  document.getElementById('winModal').style.display='flex';
+}
+function quizLose(){
+  stopMusic();sfxLose();
+  document.getElementById('quizScreen').style.display='none';
+  document.getElementById('loseKnowledge').textContent=quizBank[qsLevel][qsQidx].explain;
+  document.getElementById('loseModal').style.display='flex';
+}
+function timedEnd(){
+  stopMusic();sfxWin();
+  document.getElementById('quizScreen').style.display='none';
+  document.getElementById('trScore').textContent=qsScore;
+  document.getElementById('trCorrect').textContent=qsCorrect;
+  document.getElementById('trCombo').textContent=qsMaxCombo;
+  let rank='继续努力！';
+  if(qsScore>=200)rank='🏆 反诈大师！太厉害了！';
+  else if(qsScore>=120)rank='🥇 反诈高手！知识渊博！';
+  else if(qsScore>=60)rank='🥈 反诈能手！继续加油！';
+  else if(qsScore>=30)rank='🥉 初出茅庐，多练习！';
+  document.getElementById('trRank').textContent=rank;
+  document.getElementById('timedResultModal').style.display='flex';
+}
+function quitQuizScreen(){
+  sfxClick();stopMusic();
+  if(qsTimerInterval){clearInterval(qsTimerInterval);qsTimerInterval=null;}
+  document.getElementById('quizScreen').style.display='none';
+  if(qsMode==='timed'){document.getElementById('startScreen').style.display='block';}
+  else{document.getElementById('levelSelect').style.display='block';}
+}
+
+// ===== 幸运转盘模式 =====
+const wheelCategories=[
+  {name:'电话诈骗',color:'#ff6b6b',bankIdx:0},
+  {name:'短信诈骗',color:'#4facfe',bankIdx:1},
+  {name:'冒充公检法',color:'#a855f7',bankIdx:2},
+  {name:'理财诈骗',color:'#f39c12',bankIdx:3},
+  {name:'养老诈骗',color:'#27ae60',bankIdx:5},
+  {name:'综合挑战',color:'#ec4899',bankIdx:4}
+];
+let wsScore=0,wsSpinning=false,wsCurrentQ=null,wsAnswered=false,wsAngle=0;
+function startWheelMode(){
+  sfxClick();initAudio();if(soundOn)startMusic();
+  wsScore=0;wsSpinning=false;
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('wheelScreen').style.display='flex';
+  document.getElementById('wsScore').textContent=wsScore;
+  document.getElementById('wsHint').textContent='点击中间 GO 转动转盘，转到什么题型就答什么题！';
+  document.getElementById('wsQuestion').classList.remove('show');
+  document.getElementById('wsResult').classList.remove('show');
+  buildWheel();
+}
+function buildWheel(){
+  const wheel=document.getElementById('wheel');
+  const n=wheelCategories.length;
+  let conic='conic-gradient(';
+  wheelCategories.forEach((c,i)=>{conic+=c.color+' '+(i*360/n)+'deg '+((i+1)*360/n)+'deg'+(i<n-1?',':'');});
+  conic+=')';
+  wheel.style.background=conic;
+  // 添加文字标签
+  wheel.innerHTML='';
+  wheelCategories.forEach((c,i)=>{
+    const label=document.createElement('div');
+    label.style.cssText='position:absolute;top:50%;left:50%;width:100px;height:20px;margin-left:-50px;margin-top:-10px;text-align:center;color:#fff;font-size:11px;font-weight:bold;text-shadow:0 1px 3px rgba(0,0,0,.5);transform:rotate('+(i*360/n+30)+'deg) translateY(-100px);transform-origin:center 100px;pointer-events:none;';
+    label.textContent=c.name;
+    wheel.appendChild(label);
+  });
+  wheel.style.transform='rotate(0deg)';
+}
+function spinWheel(){
+  if(wsSpinning)return;
+  wsSpinning=true;sfxSpin();
+  document.getElementById('wsQuestion').classList.remove('show');
+  document.getElementById('wsResult').classList.remove('show');
+  const catIdx=Math.floor(Math.random()*6);
+  const stopAt=(360-catIdx*60-30);
+  const cur=((wsAngle%360)+360)%360;
+  wsAngle+=360*5+((stopAt-cur+360)%360);
+  document.getElementById('wheel').style.transform='rotate('+wsAngle+'deg)';
+  setTimeout(()=>{
+    wsSpinning=false;
+    const cat=wheelCategories[catIdx];
+    const bank=quizBank[cat.bankIdx];
+    wsCurrentQ=shuffleQuestion(bank[Math.floor(Math.random()*bank.length)]);
+    wsAnswered=false;
+    document.getElementById('wsHint').textContent='转到了【'+cat.name+'】！请答题：';
+    document.getElementById('wsQtitle').textContent='🎯 '+cat.name;
+    document.getElementById('wsQtext').textContent=wsCurrentQ.q;
+    const letters=['a','b','c','d'];
+    document.getElementById('wsQopts').innerHTML=wsCurrentQ.opts.map((opt,i)=>'<div class="ws-qopt '+letters[i]+'" onclick="answerWheel('+i+')">'+String.fromCharCode(65+i)+'. '+opt+'</div>').join('');
+    document.getElementById('wsQuestion').classList.add('show');
+    sfxQuiz();
+  },4100);
+}
+function answerWheel(idx){
+  if(wsAnswered)return;wsAnswered=true;
+  const q=wsCurrentQ;const opts=document.querySelectorAll('.ws-qopt');
+  opts.forEach(o=>o.classList.add('disabled'));
+  if(idx===q.answer){
+    opts[idx].classList.add('correct');sfxCorrect();
+    wsScore+=20;totalQuiz++;
+    document.getElementById('wsScore').textContent=wsScore;
+    document.getElementById('wsRicon').textContent='🎉';
+    document.getElementById('wsRtext').innerHTML='<strong>回答正确！+20💰</strong><br><br>'+q.explain;
+  }else{
+    opts[idx].classList.add('wrong');opts[q.answer].classList.add('correct');
+    sfxWrong();
+    document.getElementById('wsRicon').textContent='💔';
+    document.getElementById('wsRtext').innerHTML='<strong>回答错误</strong><br><br>'+q.explain;
+  }
+  setTimeout(()=>{
+    document.getElementById('wsQuestion').classList.remove('show');
+    document.getElementById('wsResult').classList.add('show');
+  },800);
+}
+function wheelContinue(){
+  sfxClick();
+  document.getElementById('wsResult').classList.remove('show');
+  document.getElementById('wsHint').textContent='点击中间 GO 继续转动转盘！';
+}
+function quitWheelMode(){
+  sfxClick();stopMusic();
+  document.getElementById('wheelScreen').style.display='none';
+  document.getElementById('startScreen').style.display='block';
+}
+
+// ===== 跑酷模式逻辑 =====
+function loadLevel(idx){
+  curLevel=levels[idx];
+  player.x=curLevel.playerStart.x;player.y=curLevel.playerStart.y;player.vx=0;player.vy=0;player.invincible=60;
+  levelCoins=0;levelStars=0;levelQuiz=0;levelCoinsCollected=[];levelStarsCollected=[];quizBoxesOpened=[];particles=[];
+  curLevel.enemies.forEach(e=>{e.startX=e.x;e.alive=true;});
+  showHint(curLevel.hint);updateHUD();
+}
+function showHint(text){const h=document.getElementById('hintBubble');h.textContent=text;h.classList.add('show');setTimeout(()=>h.classList.remove('show'),3500);}
+function updateHUD(){document.getElementById('hudLives').textContent=lives;document.getElementById('hudCoins').textContent=levelCoins;document.getElementById('hudStars').textContent=levelStars+'/'+curLevel.stars.length;document.getElementById('hudLevel').textContent='第'+(currentLevel+1)+'关';document.getElementById('hudLevelName').textContent=curLevel.name;}
+function addParticle(x,y,color,count=8){for(let i=0;i<count;i++){particles.push({x:x,y:y,vx:(Math.random()-.5)*6,vy:(Math.random()-.5)*6-2,life:30,color:color,size:Math.random()*4+2});}}
+function updateParticles(){particles=particles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.2;p.life--;return p.life>0;});}
+function rectCollide(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+function hurtPlayer(){
+  if(player.invincible>0)return;lives--;sfxHurt();addParticle(player.x+player.w/2,player.y+player.h/2,'#ff4444',15);
+  showKnowledge(knowledgeBase[Math.floor(Math.random()*knowledgeBase.length)]);
+  if(lives<=0){gameState='lose';sfxLose();stopMusic();document.getElementById('loseKnowledge').textContent=knowledgeBase[Math.floor(Math.random()*knowledgeBase.length)];document.getElementById('loseModal').style.display='flex';}
+  else{player.invincible=90;player.x=curLevel.playerStart.x;player.y=curLevel.playerStart.y;player.vx=0;player.vy=0;}
+  updateHUD();
+}
+function update(){
+  if(gameState!=='playing')return;
+  if(keys.left){player.vx=-player.speed;player.facing=-1;}else if(keys.right){player.vx=player.speed;player.facing=1;}else{player.vx*=0.8;if(Math.abs(player.vx)<0.1)player.vx=0;}
+  if(jumpPressed&&player.jumps<player.maxJumps){player.vy=-player.jumpPower;player.jumps++;player.onGround=false;sfxJump();addParticle(player.x+player.w/2,player.y+player.h,'#ffffff',5);}
+  jumpPressed=false;player.vy+=0.6;if(player.vy>15)player.vy=15;
+  player.x+=player.vx;if(player.x<0)player.x=0;if(player.x+player.w>W)player.x=W-player.w;
+  for(const p of curLevel.platforms){if(rectCollide(player,p)){if(player.vx>0)player.x=p.x-player.w;else if(player.vx<0)player.x=p.x+p.w;}}
+  player.y+=player.vy;player.onGround=false;
+  for(const p of curLevel.platforms){if(rectCollide(player,p)){if(player.vy>0){player.y=p.y-player.h;player.vy=0;player.onGround=true;player.jumps=0;}else if(player.vy<0){player.y=p.y+p.h;player.vy=0;}}}
+  if(player.y>H+50){hurtPlayer();}
+  for(const s of curLevel.spikes){if(rectCollide(player,s)){hurtPlayer();break;}}
+  curLevel.coins.forEach((c,i)=>{if(levelCoinsCollected.includes(i))return;if(rectCollide(player,{x:c.x-11,y:c.y-11,w:22,h:22})){levelCoinsCollected.push(i);levelCoins++;sfxCoin();addParticle(c.x,c.y,'#ffd700',8);if(Math.random()<0.25)showKnowledge(knowledgeBase[Math.floor(Math.random()*knowledgeBase.length)]);updateHUD();}});
+  curLevel.stars.forEach((s,i)=>{if(levelStarsCollected.includes(i))return;if(rectCollide(player,{x:s.x-13,y:s.y-13,w:26,h:26})){levelStarsCollected.push(i);levelStars++;sfxStar();addParticle(s.x,s.y,'#ffffff',12);showKnowledge('⭐ 反诈徽章！'+knowledgeBase[Math.floor(Math.random()*knowledgeBase.length)]);updateHUD();}});
+  curLevel.quizBoxes.forEach((qb,i)=>{if(quizBoxesOpened.includes(i))return;if(rectCollide(player,qb)){quizBoxesOpened.push(i);addParticle(qb.x+qb.w/2,qb.y+qb.h/2,'#ffd700',15);openQuiz(qb.quizIdx);}});
+  curLevel.enemies.forEach(e=>{if(!e.alive)return;e.x+=e.vx;if(e.x<e.range[0]||e.x+e.w>e.range[1])e.vx*=-1;if(rectCollide(player,e)){if(player.vy>0&&player.y+player.h-e.y<18){e.alive=false;player.vy=-10;sfxCoin();addParticle(e.x+e.w/2,e.y+e.h/2,'#ff6b6b',12);showKnowledge('💪 踩扁诈骗陷阱！'+knowledgeBase[Math.floor(Math.random()*knowledgeBase.length)]);}else{hurtPlayer();}}});
+  if(rectCollide(player,curLevel.goal)){winLevel();}
+  if(player.invincible>0)player.invincible--;player.animFrame++;updateParticles();
+}
+function openQuiz(quizIdx){
+  gameState='quiz';stopMusic();sfxQuiz();
+  const bank=quizBank[currentLevel];const quiz=shuffleQuestion(bank[quizIdx%bank.length]);currentQuiz=quiz;
+  document.getElementById('quizTag').textContent='第'+(currentLevel+1)+'关 · '+curLevel.name;
+  document.getElementById('quizQuestion').textContent=quiz.q;
+  document.getElementById('quizOpts').innerHTML=quiz.opts.map((opt,i)=>'<button class="quiz-opt" onclick="answerQuiz('+i+')">'+String.fromCharCode(65+i)+'. '+opt+'</button>').join('');
+  document.getElementById('quizFeedback').className='quiz-feedback';document.getElementById('quizFeedback').textContent='';
+  document.getElementById('quizReward').className='quiz-reward';document.getElementById('quizReward').textContent='';
+  document.getElementById('quizContinue').classList.remove('show');
+  document.getElementById('quizModal').style.display='flex';
+}
+function answerQuiz(idx){
+  const quiz=currentQuiz;const opts=document.querySelectorAll('.quiz-opt');
+  opts.forEach(o=>o.classList.add('disabled'));
+  const fb=document.getElementById('quizFeedback');const reward=document.getElementById('quizReward');
+  if(idx===quiz.answer){opts[idx].classList.add('correct');sfxCorrect();levelQuiz++;totalQuiz++;levelCoins+=15;totalCoins+=15;let rt='🎉 答对了！+15💰';if(Math.random()<0.25&&lives<5){lives++;rt+=' +1❤️';}reward.textContent=rt;reward.className='quiz-reward show';fb.className='quiz-feedback good show';fb.innerHTML='✅ <strong>回答正确！</strong><br>'+quiz.explain;}
+  else{opts[idx].classList.add('wrong');opts[quiz.answer].classList.add('correct');sfxWrong();lives--;fb.className='quiz-feedback bad show';fb.innerHTML='❌ <strong>回答错误。</strong><br>'+quiz.explain+'<br><br>💔 -1❤️';if(lives<=0){setTimeout(()=>{document.getElementById('quizModal').style.display='none';gameState='lose';sfxLose();document.getElementById('loseKnowledge').textContent=quiz.explain;document.getElementById('loseModal').style.display='flex';},1500);return;}}
+  updateHUD();document.getElementById('quizContinue').classList.add('show');
+}
+function closeQuiz(){sfxClick();document.getElementById('quizModal').style.display='none';gameState='playing';if(soundOn)startMusic();updateHUD();}
+let knowledgeTimer=null;
+function showKnowledge(text){const bubble=document.getElementById('knowledgeBubble');document.getElementById('knowledgeText').textContent=text;bubble.classList.add('show');if(knowledgeTimer)clearTimeout(knowledgeTimer);knowledgeTimer=setTimeout(()=>bubble.classList.remove('show'),4500);}
+function winLevel(){
+  gameState='win';sfxWin();stopMusic();totalCoins+=levelCoins;totalStars+=levelStars;
+  if(currentLevel+1>=unlockedLevels&&currentLevel+1<levels.length){unlockedLevels=currentLevel+2;try{localStorage.setItem('fzbx_unlocked',unlockedLevels);}catch(e){}}
+  document.getElementById('winCoins').textContent=levelCoins;document.getElementById('winStars').textContent=levelStars+'/'+curLevel.stars.length;document.getElementById('winQuiz').textContent=levelQuiz;
+  document.getElementById('winTitle').textContent='🎉 关卡通过！';document.getElementById('winMsg').textContent='太棒了！你成功躲避了所有诈骗陷阱！';
+  const knowledge=quizBank[currentLevel].map(q=>q.explain).join(' ');
+  document.getElementById('winKnowledgeText').textContent=knowledge.substring(0,90)+'...';
+  if(currentLevel>=levels.length-1){document.getElementById('winNextBtn').style.display='none';setTimeout(()=>{document.getElementById('winModal').style.display='none';document.getElementById('finalCoins').textContent=totalCoins;document.getElementById('finalStars').textContent=totalStars;document.getElementById('finalQuiz').textContent=totalQuiz;document.getElementById('finalModal').style.display='flex';},2500);}else{document.getElementById('winNextBtn').style.display='inline-block';}
+  document.getElementById('winModal').style.display='flex';
+}
+
+// ===== 渲染 =====
+function drawBackground(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,curLevel.bg[0]);g.addColorStop(1,curLevel.bg[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.fillStyle='rgba(255,255,255,.45)';const t=Date.now()/3000;for(let i=0;i<4;i++){const cx=((i*150+t*20)%(W+100))-50;const cy=50+i*45;ctx.beginPath();ctx.arc(cx,cy,18,0,Math.PI*2);ctx.arc(cx+18,cy-4,22,0,Math.PI*2);ctx.arc(cx+40,cy,18,0,Math.PI*2);ctx.fill();}}
+function drawPlatforms(){for(const p of curLevel.platforms){ctx.fillStyle=curLevel.groundColor;ctx.fillRect(p.x,p.y,p.w,p.h);ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(p.x,p.y,p.w,3);if(p.h>30){ctx.fillStyle='rgba(0,0,0,.08)';for(let i=0;i<p.w;i+=28){ctx.fillRect(p.x+i+8,p.y+18,5,5);ctx.fillRect(p.x+i+18,p.y+35,4,4);}}}}
+function drawSpikes(){for(const s of curLevel.spikes){const count=Math.floor(s.w/14);for(let i=0;i<count;i++){const x=s.x+i*14;ctx.fillStyle='#888';ctx.beginPath();ctx.moveTo(x,s.y+s.h);ctx.lineTo(x+7,s.y);ctx.lineTo(x+14,s.y+s.h);ctx.fill();ctx.fillStyle='#aaa';ctx.beginPath();ctx.moveTo(x+3,s.y+s.h);ctx.lineTo(x+7,s.y+3);ctx.lineTo(x+7,s.y+s.h);ctx.fill();}}}
+function drawCoins(){const t=Date.now()/200;curLevel.coins.forEach((c,i)=>{if(levelCoinsCollected.includes(i))return;const bob=Math.sin(t+i)*3;const scale=Math.abs(Math.cos(t+i));ctx.save();ctx.translate(c.x,c.y+bob);ctx.scale(scale*0.8+0.2,1);ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffaa00';ctx.beginPath();ctx.arc(0,0,6,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffd700';ctx.font='bold 9px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('$',0,1);ctx.restore();});}
+function drawStars(){const t=Date.now()/300;curLevel.stars.forEach((s,i)=>{if(levelStarsCollected.includes(i))return;const bob=Math.sin(t+i)*4;const rot=Math.sin(t+i)*0.2;ctx.save();ctx.translate(s.x,s.y+bob);ctx.rotate(rot);ctx.fillStyle='rgba(255,255,255,.35)';ctx.beginPath();ctx.arc(0,0,17,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();for(let j=0;j<5;j++){const angle=(j*4*Math.PI/5)-Math.PI/2;const r=j%2===0?13:5;ctx.lineTo(Math.cos(angle)*r,Math.sin(angle)*r);}ctx.closePath();ctx.fill();ctx.fillStyle='#ffd700';ctx.beginPath();for(let j=0;j<5;j++){const angle=(j*4*Math.PI/5)-Math.PI/2;const r=j%2===0?9:3;ctx.lineTo(Math.cos(angle)*r,Math.sin(angle)*r);}ctx.closePath();ctx.fill();ctx.restore();});}
+function drawQuizBoxes(){const t=Date.now()/200;curLevel.quizBoxes.forEach((qb,i)=>{if(quizBoxesOpened.includes(i))return;const bob=Math.sin(t+i)*3;ctx.save();ctx.translate(qb.x+qb.w/2,qb.y+qb.h/2+bob);ctx.fillStyle='rgba(255,215,0,'+(0.25+Math.sin(t)*0.15)+')';ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8B4513';ctx.fillRect(-13,-9,26,18);ctx.fillStyle='#DAA520';ctx.fillRect(-13,-13,26,7);ctx.fillStyle='#ffd700';ctx.fillRect(-2.5,-9,5,9);ctx.fillStyle='#fff';ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',0,3);ctx.restore();});}
+function drawEnemies(){curLevel.enemies.forEach(e=>{if(!e.alive)return;const t=Date.now()/150;ctx.save();ctx.translate(e.x+e.w/2,e.y+e.h/2);if(e.type==='sms'){ctx.fillStyle='#ff6b6b';ctx.fillRect(-e.w/2,-e.h/2,e.w,e.h);ctx.fillStyle='#fff';ctx.font='13px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('💬',0,0);}else if(e.type==='phone'){ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(0,0,e.w/2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='15px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('📞',0,1);}else if(e.type==='coin'){ctx.fillStyle='#c0392b';ctx.beginPath();ctx.arc(0,0,e.w/2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',0,1);}else if(e.type==='boss'){const pulse=Math.sin(t)*2;ctx.fillStyle='#8B0000';ctx.beginPath();ctx.arc(0,0,e.w/2+pulse,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ff4444';ctx.beginPath();ctx.arc(0,0,e.w/2-4+pulse,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='18px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('👹',0,1);}ctx.restore();});}
+function drawGoal(){const g=curLevel.goal;const t=Date.now()/200;ctx.fillStyle='#8B4513';ctx.fillRect(g.x+5,g.y,4,g.h);ctx.fillStyle='#ff4444';ctx.beginPath();ctx.moveTo(g.x+9,g.y+5);ctx.quadraticCurveTo(g.x+28+Math.sin(t)*3,g.y+10,g.x+33,g.y+20);ctx.quadraticCurveTo(g.x+28+Math.sin(t)*3,g.y+25,g.x+9,g.y+30);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('终',g.x+21,g.y+18);ctx.fillStyle='rgba(255,215,0,'+(0.25+Math.sin(t)*0.15)+')';ctx.beginPath();ctx.arc(g.x+20,g.y+g.h/2,28,0,Math.PI*2);ctx.fill();}
+function drawPlayer(){const p=player;if(p.invincible>0&&Math.floor(p.invincible/5)%2===0)return;ctx.save();ctx.translate(p.x+p.w/2,p.y+p.h/2);if(p.facing===-1)ctx.scale(-1,1);ctx.fillStyle='#4facfe';ctx.fillRect(-p.w/2+3,-p.h/2+13,p.w-6,p.h-17);ctx.fillStyle='#ffd1a3';ctx.beginPath();ctx.arc(0,-p.h/2+7,11,0,Math.PI*2);ctx.fill();ctx.fillStyle='#333';ctx.beginPath();ctx.arc(0,-p.h/2+4,11,Math.PI,0);ctx.fill();ctx.fillStyle='#333';ctx.beginPath();ctx.arc(4,-p.h/2+7,2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(3,-p.h/2+11,3,0,Math.PI);ctx.stroke();const legOffset=p.onGround&&Math.abs(p.vx)>0.5?Math.sin(p.animFrame*0.4)*4:0;ctx.fillStyle='#333';ctx.fillRect(-p.w/2+5,p.h/2-7,7,7+legOffset);ctx.fillRect(p.w/2-12,p.h/2-7,7,7-legOffset);ctx.fillStyle='#ffd700';ctx.beginPath();ctx.moveTo(0,-2);ctx.lineTo(7,2);ctx.lineTo(7,7);ctx.lineTo(0,13);ctx.lineTo(-7,7);ctx.lineTo(-7,2);ctx.closePath();ctx.fill();ctx.fillStyle='#e74c3c';ctx.font='bold 9px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('防',0,6);ctx.restore();}
+function drawParticles(){for(const p of particles){ctx.globalAlpha=p.life/30;ctx.fillStyle=p.color;ctx.fillRect(p.x-p.size/2,p.y-p.size/2,p.size,p.size);}ctx.globalAlpha=1;}
+function render(){if(!curLevel)return;drawBackground();drawPlatforms();drawSpikes();drawCoins();drawStars();drawQuizBoxes();drawGoal();drawEnemies();drawPlayer();drawParticles();}
+function gameLoop(){if(gameMode==='run'&&curLevel&&gameState!=='menu'){update();render();}requestAnimationFrame(gameLoop);}
+
+// ===== UI控制 =====
+function pauseGame(){if(gameState!=='playing')return;gameState='paused';stopMusic();document.getElementById('pauseModal').style.display='flex';}
+function resumeGame(){sfxClick();gameState='playing';document.getElementById('pauseModal').style.display='none';if(soundOn)startMusic();}
+function restartLevel(){
+  sfxClick();
+  ['pauseModal','winModal','loseModal','quizModal','timedResultModal'].forEach(id=>document.getElementById(id).style.display='none');
+  if(gameMode==='run'){lives=3;loadLevel(currentLevel);gameState='playing';if(soundOn)startMusic();}
+  else if(gameMode==='quiz'){startQuizScreen('quiz',currentLevel);}
+}
+function nextLevel(){
+  sfxClick();document.getElementById('winModal').style.display='none';
+  currentLevel++;
+  if(currentLevel>=levels.length){quitToMenu();return;}
+  lives=Math.min(lives+1,5);
+  if(gameMode==='run'){loadLevel(currentLevel);gameState='playing';if(soundOn)startMusic();}
+  else{startQuizScreen('quiz',currentLevel);}
+}
+function quitToMenu(){
+  sfxClick();stopMusic();gameState='menu';
+  if(qsTimerInterval){clearInterval(qsTimerInterval);qsTimerInterval=null;}
+  ['pauseModal','winModal','loseModal','finalModal','quizModal','timedResultModal'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('hud').style.display='none';document.getElementById('pauseBtn').style.display='none';
+  document.getElementById('touchControls').style.display='none';document.getElementById('quizScreen').style.display='none';
+  document.getElementById('wheelScreen').style.display='none';document.getElementById('levelSelect').style.display='none';
+  document.getElementById('knowledgeBubble').classList.remove('show');
+  document.getElementById('startScreen').style.display='block';
+}
+function showShare(){sfxClick();document.getElementById('shareModal').style.display='flex';}
+function closeShare(){sfxClick();document.getElementById('shareModal').style.display='none';}
+function showAbout(){sfxClick();document.getElementById('aboutQCount').textContent=quizBank.reduce((n,b)=>n+b.length,0);document.getElementById('aboutModal').style.display='flex';}
+function closeAbout(){sfxClick();document.getElementById('aboutModal').style.display='none';}
+function showHelp(){sfxClick();document.getElementById('helpModal').style.display='flex';}
+function closeHelp(){sfxClick();document.getElementById('helpModal').style.display='none';}
+
+// ===== 输入 =====
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=true;if(e.key==='ArrowRight'||e.key==='d')keys.right=true;if((e.key==='ArrowUp'||e.key==='w'||e.key===' ')&&!jumpPressed)jumpPressed=true;if(e.key==='Escape'){if(gameState==='playing')pauseGame();else if(gameState==='paused')resumeGame();}});
+document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;if(e.key==='ArrowRight'||e.key==='d')keys.right=false;});
+function bindTouch(id,key,isJump){const el=document.getElementById(id);el.addEventListener('touchstart',e=>{e.preventDefault();if(isJump)jumpPressed=true;else keys[key]=true;},{passive:false});el.addEventListener('touchend',e=>{e.preventDefault();if(!isJump)keys[key]=false;},{passive:false});el.addEventListener('mousedown',e=>{e.preventDefault();if(isJump)jumpPressed=true;else keys[key]=true;});el.addEventListener('mouseup',e=>{e.preventDefault();if(!isJump)keys[key]=false;});el.addEventListener('mouseleave',e=>{if(!isJump)keys[key]=false;});}
+bindTouch('btnLeft','left',false);bindTouch('btnRight','right',false);bindTouch('btnJump',null,true);
+
+gameLoop();
+</script>
+</body>
+</html>
